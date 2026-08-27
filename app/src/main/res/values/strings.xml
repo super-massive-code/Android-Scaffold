@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Scaffold</string>
+
+    <string name="action_back">Back</string>
+    <string name="action_retry">Retry</string>
+
+    <string name="nav_contacts">Contacts</string>
+    <string name="nav_posts">Posts</string>
+
+    <string name="post_list_error_fallback">Unable to load posts</string>
+
+    <string name="post_detail_title">Post</string>
+    <string name="post_detail_error_fallback">Unable to load post</string>
+
+    <string name="contact_list_action_add">Add contact</string>
+    <string name="contact_list_error_fallback">Unable to load contacts</string>
+
+    <string name="contact_form_title">New contact</string>
+    <string name="contact_form_label_first_name">First name</string>
+    <string name="contact_form_label_last_name">Last name</string>
+    <string name="contact_form_label_address_line1">Address line 1</string>
+    <string name="contact_form_label_address_line2">Address line 2 (optional)</string>
+    <string name="contact_form_label_city">City</string>
+    <string name="contact_form_label_postcode">Postcode</string>
+    <string name="contact_form_action_save">Save</string>
+    <string name="contact_form_action_saving">Saving…</string>
+    <string name="contact_form_error_required">Required</string>
+    <string name="contact_form_error_invalid_postcode">Enter a valid UK postcode</string>
+</resources>

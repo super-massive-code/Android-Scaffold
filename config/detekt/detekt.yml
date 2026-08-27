@@ -1,0 +1,22 @@
+config:
+  validation: true
+  warningsAsErrors: false
+
+style:
+  MagicNumber:
+    active: true
+    ignoreAnnotated: ["Composable"]
+    ignoreNumbers: ["-1", "0", "1", "2", "100"]
+
+complexity:
+  LongMethod:
+    active: true
+    threshold: 80
+  TooManyFunctions:
+    active: true
+    thresholdInClasses: 15
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ["Composable"]
