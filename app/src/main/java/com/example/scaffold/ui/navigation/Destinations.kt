@@ -7,11 +7,11 @@ sealed interface Destinations {
     data object ContactList : Destinations
 
     @Serializable
-    data object PostList : Destinations
+    data object MealList : Destinations
 
     @Serializable
-    data class PostDetail(
-        val postId: Int,
+    data class MealDetail(
+        val mealId: String,
     ) : Destinations
 
     @Serializable

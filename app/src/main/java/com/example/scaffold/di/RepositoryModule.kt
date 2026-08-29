@@ -2,8 +2,8 @@ package com.example.scaffold.di
 
 import com.example.scaffold.data.repository.ContactRepository
 import com.example.scaffold.data.repository.ContactRepositoryImpl
-import com.example.scaffold.data.repository.PostRepository
-import com.example.scaffold.data.repository.PostRepositoryImpl
+import com.example.scaffold.data.repository.MealRepository
+import com.example.scaffold.data.repository.MealRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ import javax.inject.Singleton
 abstract class RepositoryModule {
     @Binds
     @Singleton
-    abstract fun bindPostRepository(impl: PostRepositoryImpl): PostRepository
+    abstract fun bindMealRepository(impl: MealRepositoryImpl): MealRepository
 
     @Binds
     @Singleton

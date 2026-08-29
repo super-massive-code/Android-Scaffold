@@ -17,5 +17,5 @@ enum class TopLevelDestination(
     val icon: ImageVector,
 ) {
     Contacts(Destinations.ContactList, R.string.nav_contacts, Icons.Filled.Person),
-    Posts(Destinations.PostList, R.string.nav_posts, Icons.AutoMirrored.Filled.List),
+    Meals(Destinations.MealList, R.string.nav_meals, Icons.AutoMirrored.Filled.List),
 }

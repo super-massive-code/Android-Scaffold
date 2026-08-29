@@ -1,10 +1,10 @@
-package com.example.scaffold.ui.feature.postdetail
+package com.example.scaffold.ui.feature.mealdetail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.example.scaffold.data.repository.PostRepository
+import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.ui.navigation.Destinations
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,24 +18,24 @@ import javax.inject.Inject
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
-class PostDetailViewModel
+class MealDetailViewModel
     @Inject
     constructor(
         savedStateHandle: SavedStateHandle,
-        private val postRepository: PostRepository,
+        private val mealRepository: MealRepository,
     ) : ViewModel() {
-        private val postId = savedStateHandle.toRoute<Destinations.PostDetail>().postId
+        private val mealId = savedStateHandle.toRoute<Destinations.MealDetail>().mealId
 
-        val uiState: StateFlow<PostDetailUiState> =
-            postRepository
-                .observePost(postId)
-                .map { post ->
-                    if (post != null) PostDetailUiState.Content(post) else PostDetailUiState.Loading
-                }.catch { throwable -> emit(PostDetailUiState.Error(throwable.message)) }
+        val uiState: StateFlow<MealDetailUiState> =
+            mealRepository
+                .observeMeal(mealId)
+                .map { meal ->
+                    if (meal?.instructions != null) MealDetailUiState.Content(meal) else MealDetailUiState.Loading
+                }.catch { throwable -> emit(MealDetailUiState.Error(throwable.message)) }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-                    initialValue = PostDetailUiState.Loading,
+                    initialValue = MealDetailUiState.Loading,
                 )
 
         init {
@@ -44,7 +44,7 @@ class PostDetailViewModel
 
         fun refresh() {
             viewModelScope.launch {
-                runCatching { postRepository.refresh() }
+                runCatching { mealRepository.refresh(mealId) }
             }
         }
     }

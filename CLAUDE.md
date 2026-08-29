@@ -34,7 +34,7 @@ Each feature under `ui/feature/<name>/` has three files:
 
 Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable
-parameters — see `PostDetailViewModel` for the pattern.
+parameters — see `MealDetailViewModel` for the pattern.
 
 **Forms are the exception to the sealed-interface rule.** A form has no
 resource-loading lifecycle, so `<Name>UiState` is a flat `data class` of
@@ -49,7 +49,7 @@ ViewModel.
 
 Form validation itself lives in a co-located `<Name>FormValidation.kt` —
 top-level pure functions (not a wrapper object; no shared state to justify
-one, same style as `PostMappers.kt`/`ContactMappers.kt`) that take a raw
+one, same style as `MealMappers.kt`/`ContactMappers.kt`) that take a raw
 field value and return `@StringRes Int?`, e.g. `requiredFieldError(value)`,
 `postcodeError(value)` in `ContactFormValidation.kt`. The ViewModel never
 resolves string resources itself (no injected `Context`/`Application`) — the
@@ -71,16 +71,25 @@ Offline-first repository pattern:
 - Mappers (`toEntity()`, `toDomain()`) live next to the repository impl, not
   on the model classes themselves.
 
-See `PostRepositoryImpl` for the reference implementation, backed by
-`jsonplaceholder.typicode.com` as a placeholder API. `ContactRepository` is
-the local-only variant of the same pattern: no remote source, just a
-`suspend fun saveContact()` write path into Room — the counterpart to
-`PostRepository`'s read path.
+See `MealRepositoryImpl` for the reference implementation, backed by
+`themealdb.com` as a placeholder API. Its `refresh()` fetches the list (id,
+title, thumbnail) from `filter.php`; because that endpoint doesn't include
+the full recipe text, a second `refresh(id: String)` lazily fetches one
+meal's full detail from `lookup.php` when its detail screen opens — a
+repository is free to add such a per-item refresh overload alongside the
+list-level one where the backing API's list/detail payloads genuinely
+differ in shape, rather than forcing a single `refresh()` to over-fetch.
+`ContactRepository` is the local-only variant of the same pattern: no remote
+source, just a `suspend fun saveContact()` write path into Room — the
+counterpart to `MealRepository`'s read path.
 
 **Schema changes get an explicit `Migration`, never destructive fallback.**
-Bump `@Database(version = ...)` in `AppDatabase` and add a `Migration` object
-in `data/local/Migrations.kt` (registered via `.addMigrations(...)` in
-`DatabaseModule`) — see `MIGRATION_1_2`, which added the `contacts` table.
+Bump `@Database(version = ...)` in `AppDatabase` and add a `Migration`
+object in `data/local/Migrations.kt` (registered via `.addMigrations(...)`
+in `DatabaseModule`). The database is currently at version 1 with no
+migration history — `Migrations.kt` doesn't exist yet — so the first real
+schema change after this baseline is what creates that file and starts
+numbering from `MIGRATION_1_2`.
 
 ## Dependency injection
 
@@ -98,14 +107,14 @@ dependencies yet.
 screens with the type-safe `composable<Destinations.X>` overload — no string
 routes, no manual argument bundling.
 
-The app is a 2-tab bottom-nav app (Contacts, Posts). `TopLevelDestination.kt`
+The app is a 2-tab bottom-nav app (Contacts, Meals). `TopLevelDestination.kt`
 enumerates the tabs (route + label + icon); `ScaffoldNavHost` holds a single
 `NavController` and outer `Scaffold`/`NavigationBar` shared by both tabs —
 there's no per-tab back stack or nested `NavHost`. Tab switches use the
 standard `popUpTo(graph.findStartDestination().id) { saveState = true }` +
 `launchSingleTop` + `restoreState` combo so each tab keeps its own scroll
 position/state when you switch away and back. The bottom bar itself is
-hidden on non-top-level destinations (`PostDetail`, `ContactForm`) via
+hidden on non-top-level destinations (`MealDetail`, `ContactForm`) via
 `currentDestination.hierarchy.any { it.hasRoute(topLevel.route::class) }` —
 detail/form screens are full-screen, not tab content.
 
@@ -117,13 +126,13 @@ bar updates automatically since it iterates `TopLevelDestination.entries`.
 
 Prefer hand-written fakes over mocking libraries: implement the repository
 or DAO interface directly with an in-memory `MutableStateFlow` (see
-`PostRepositoryImplTest`, `PostListViewModelTest`). ViewModel tests need
+`MealRepositoryImplTest`, `MealListViewModelTest`). ViewModel tests need
 `MainDispatcherRule` (`app/src/test/java/com/example/scaffold/MainDispatcherRule.kt`)
 to give `viewModelScope` a `TestDispatcher` as `Dispatchers.Main`.
 
 `ErrorState` (`ui/components/StatusComposables.kt`) takes a nullable
 `onRetry: (() -> Unit)? = null` and only renders the Retry button when it's
-non-null. Read screens backed by a network refresh (`PostList`, `PostDetail`)
+non-null. Read screens backed by a network refresh (`MealList`, `MealDetail`)
 pass a real retry action; screens backed by a pure local `Flow` with nothing
 to retry (`ContactList`) omit it rather than wiring up a button that lies
 about doing something.
@@ -148,9 +157,9 @@ messages thrown internally) are exempt.
   a string.
 - A sealed `Error(message: String?)` case that can carry either a live
   exception's message *or* a static fallback stays nullable all the way
-  through the ViewModel (`PostListUiState.Error(throwable.message)`, no
+  through the ViewModel (`MealListUiState.Error(throwable.message)`, no
   `?:` in the ViewModel) — the Composable supplies the fallback:
-  `state.message ?: stringResource(R.string.post_list_error_fallback)`.
+  `state.message ?: stringResource(R.string.meal_list_error_fallback)`.
   This is the one place a `String?` (not a resource id) flows out of a
   ViewModel, because the live exception text is inherently dynamic content
   that can never itself be a resource.

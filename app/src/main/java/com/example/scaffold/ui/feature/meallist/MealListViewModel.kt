@@ -1,8 +1,8 @@
-package com.example.scaffold.ui.feature.postlist
+package com.example.scaffold.ui.feature.meallist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.scaffold.data.repository.PostRepository
+import com.example.scaffold.data.repository.MealRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,23 +14,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PostListViewModel
+class MealListViewModel
     @Inject
     constructor(
-        private val postRepository: PostRepository,
+        private val mealRepository: MealRepository,
     ) : ViewModel() {
-        private val _uiState = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
-        val uiState: StateFlow<PostListUiState> = _uiState.asStateFlow()
+        private val _uiState = MutableStateFlow<MealListUiState>(MealListUiState.Loading)
+        val uiState: StateFlow<MealListUiState> = _uiState.asStateFlow()
 
         init {
-            postRepository
-                .observePosts()
-                .onEach { posts ->
+            mealRepository
+                .observeMeals()
+                .onEach { meals ->
                     _uiState.update { current ->
                         when {
-                            posts.isNotEmpty() -> PostListUiState.Content(posts)
-                            current is PostListUiState.Error -> current
-                            else -> PostListUiState.Loading
+                            meals.isNotEmpty() -> MealListUiState.Content(meals)
+                            current is MealListUiState.Error -> current
+                            else -> MealListUiState.Loading
                         }
                     }
                 }.launchIn(viewModelScope)
@@ -39,10 +39,10 @@ class PostListViewModel
 
         fun refresh() {
             viewModelScope.launch {
-                runCatching { postRepository.refresh() }
+                runCatching { mealRepository.refresh() }
                     .onFailure { throwable ->
-                        if (_uiState.value !is PostListUiState.Content) {
-                            _uiState.value = PostListUiState.Error(throwable.message)
+                        if (_uiState.value !is MealListUiState.Content) {
+                            _uiState.value = MealListUiState.Error(throwable.message)
                         }
                     }
             }

@@ -1,7 +1,7 @@
 package com.example.scaffold.di
 
 import com.example.scaffold.BuildConfig
-import com.example.scaffold.data.remote.PostApi
+import com.example.scaffold.data.remote.MealApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
 
-private const val BASE_URL = "https://jsonplaceholder.typicode.com/"
+private const val BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -53,5 +53,5 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providePostApi(retrofit: Retrofit): PostApi = retrofit.create(PostApi::class.java)
+    fun provideMealApi(retrofit: Retrofit): MealApi = retrofit.create(MealApi::class.java)
 }

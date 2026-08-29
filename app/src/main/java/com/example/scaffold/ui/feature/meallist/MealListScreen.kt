@@ -1,10 +1,13 @@
-package com.example.scaffold.ui.feature.postlist
+package com.example.scaffold.ui.feature.meallist
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -13,42 +16,46 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.example.scaffold.R
-import com.example.scaffold.model.Post
+import com.example.scaffold.model.Meal
 import com.example.scaffold.ui.components.ErrorState
 import com.example.scaffold.ui.components.LoadingIndicator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostListScreen(
-    onPostClick: (Int) -> Unit,
+fun MealListScreen(
+    onMealClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PostListViewModel = hiltViewModel(),
+    viewModel: MealListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_posts)) }) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_meals)) }) },
     ) { padding ->
         when (val state = uiState) {
-            PostListUiState.Loading -> LoadingIndicator(Modifier.padding(padding))
-            is PostListUiState.Error ->
+            MealListUiState.Loading -> LoadingIndicator(Modifier.padding(padding))
+            is MealListUiState.Error ->
                 ErrorState(
-                    message = state.message ?: stringResource(R.string.post_list_error_fallback),
+                    message = state.message ?: stringResource(R.string.meal_list_error_fallback),
                     onRetry = viewModel::refresh,
                     modifier = Modifier.padding(padding),
                 )
-            is PostListUiState.Content ->
-                PostList(
-                    posts = state.posts,
-                    onPostClick = onPostClick,
+            is MealListUiState.Content ->
+                MealList(
+                    meals = state.meals,
+                    onMealClick = onMealClick,
                     modifier = Modifier.padding(padding),
                 )
         }
@@ -56,22 +63,22 @@ fun PostListScreen(
 }
 
 @Composable
-private fun PostList(
-    posts: List<Post>,
-    onPostClick: (Int) -> Unit,
+private fun MealList(
+    meals: List<Meal>,
+    onMealClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
-        items(items = posts, key = { it.id }) { post ->
-            PostRow(post = post, onClick = { onPostClick(post.id) })
+        items(items = meals, key = { it.id }) { meal ->
+            MealRow(meal = meal, onClick = { onMealClick(meal.id) })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PostRow(
-    post: Post,
+private fun MealRow(
+    meal: Meal,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -82,12 +89,26 @@ private fun PostRow(
                 .padding(vertical = 6.dp)
                 .fillMaxWidth(),
     ) {
-        Text(
-            text = post.title,
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp),
-        )
+        ) {
+            AsyncImage(
+                model = meal.thumbnailUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+            )
+            Text(
+                text = meal.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 16.dp),
+            )
+        }
     }
 }

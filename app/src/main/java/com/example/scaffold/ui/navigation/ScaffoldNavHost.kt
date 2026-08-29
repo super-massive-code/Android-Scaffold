@@ -19,8 +19,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.scaffold.ui.feature.contactform.ContactFormScreen
 import com.example.scaffold.ui.feature.contactlist.ContactListScreen
-import com.example.scaffold.ui.feature.postdetail.PostDetailScreen
-import com.example.scaffold.ui.feature.postlist.PostListScreen
+import com.example.scaffold.ui.feature.mealdetail.MealDetailScreen
+import com.example.scaffold.ui.feature.meallist.MealListScreen
 
 @Composable
 fun ScaffoldNavHost(modifier: Modifier = Modifier) {
@@ -66,13 +66,13 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
             composable<Destinations.ContactList> {
                 ContactListScreen(onAddContactClick = { navController.navigate(Destinations.ContactForm) })
             }
-            composable<Destinations.PostList> {
-                PostListScreen(
-                    onPostClick = { postId -> navController.navigate(Destinations.PostDetail(postId)) },
+            composable<Destinations.MealList> {
+                MealListScreen(
+                    onMealClick = { mealId -> navController.navigate(Destinations.MealDetail(mealId)) },
                 )
             }
-            composable<Destinations.PostDetail> {
-                PostDetailScreen(onBack = { navController.popBackStack() })
+            composable<Destinations.MealDetail> {
+                MealDetailScreen(onBack = { navController.popBackStack() })
             }
             composable<Destinations.ContactForm> {
                 ContactFormScreen(onBack = { navController.popBackStack() })
