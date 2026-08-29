@@ -7,15 +7,14 @@ import androidx.navigation.toRoute
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.ui.navigation.Destinations
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class MealDetailViewModel
@@ -26,25 +25,32 @@ class MealDetailViewModel
     ) : ViewModel() {
         private val mealId = savedStateHandle.toRoute<Destinations.MealDetail>().mealId
 
-        val uiState: StateFlow<MealDetailUiState> =
-            mealRepository
-                .observeMeal(mealId)
-                .map { meal ->
-                    if (meal?.instructions != null) MealDetailUiState.Content(meal) else MealDetailUiState.Loading
-                }.catch { throwable -> emit(MealDetailUiState.Error(throwable.message)) }
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-                    initialValue = MealDetailUiState.Loading,
-                )
+        private val _uiState = MutableStateFlow<MealDetailUiState>(MealDetailUiState.Loading)
+        val uiState: StateFlow<MealDetailUiState> = _uiState.asStateFlow()
 
         init {
+            mealRepository
+                .observeMeal(mealId)
+                .onEach { meal ->
+                    _uiState.update { current ->
+                        when {
+                            meal?.instructions != null -> MealDetailUiState.Content(meal)
+                            current is MealDetailUiState.Error -> current
+                            else -> MealDetailUiState.Loading
+                        }
+                    }
+                }.launchIn(viewModelScope)
             refresh()
         }
 
         fun refresh() {
             viewModelScope.launch {
                 runCatching { mealRepository.refresh(mealId) }
+                    .onFailure { throwable ->
+                        if (_uiState.value !is MealDetailUiState.Content) {
+                            _uiState.value = MealDetailUiState.Error(throwable.message)
+                        }
+                    }
             }
         }
     }

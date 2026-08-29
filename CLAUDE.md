@@ -146,6 +146,25 @@ can't (a wrong `@Query` name, TheMealDB's real `{"meals":null}` response).
 It needs a connected device or emulator: `./gradlew
 connectedDebugAndroidTest`.
 
+A ViewModel that reads `SavedStateHandle.toRoute<Destinations.X>()` (any
+`<Name>DetailViewModel`) can't be unit-tested as a plain JVM test either —
+`toRoute()` internally calls `androidx.core.os.BundleKt.bundleOf`, and
+`android.os.Bundle` is stubbed to throw ("not mocked") outside a real
+Android runtime. `MealDetailViewModelTest` lives in `app/src/androidTest/`
+for this reason, alongside `MealRepositoryEndToEndTest`, and sets
+`Dispatchers.Main` to an `UnconfinedTestDispatcher` itself in `@Before`/
+`@After` (the same thing `MainDispatcherRule` does for JVM tests) since a
+real device's `Dispatchers.Main` is the actual main-looper dispatcher, not
+something `advanceUntilIdle()` can drive on its own.
+
+Compose UI tests (`MealListScreenTest`) don't need Hilt test infrastructure:
+every `<Name>Screen` already accepts an explicit `viewModel` parameter
+(default `= hiltViewModel()`), so a test can construct a real ViewModel
+directly against a hand-written fake repository — the same fakes used in
+the ViewModel unit tests — and pass it straight in, exercising the actual
+Composable through Compose's real rendering/click handling with no DI
+involved.
+
 `ErrorState` (`ui/components/StatusComposables.kt`) takes a nullable
 `onRetry: (() -> Unit)? = null` and only renders the Retry button when it's
 non-null. Read screens backed by a network refresh (`MealList`, `MealDetail`)
@@ -204,8 +223,16 @@ naming rule doesn't know `@Composable` functions are conventionally
 PascalCase (detekt's `FunctionNaming.ignoreAnnotated` in `detekt.yml` only
 covers detekt's own check) and will flag every screen composable in the app.
 Both were only discovered by actually running `ktlintCheck`/`detekt` —
-they're configured via Gradle at setup time but nothing runs them
-automatically, so don't assume a clean tree just because the project builds.
+they're configured via Gradle at setup time, and nothing runs them locally
+on its own, so don't assume a clean tree just because the project builds.
+`.github/workflows/ci.yml` runs `ktlintCheck detekt testDebugUnitTest
+assembleDebug` on every push/PR to `main`, but that's a remote safety net,
+not a substitute for running them yourself before committing. CI
+deliberately excludes `connectedDebugAndroidTest` — the `androidTest` suite
+needs a booted emulator/device (see `./gradlew connectedDebugAndroidTest`
+and this project's `Pixel_9` AVD), which is heavier to provision in CI than
+it's worth for a personal scaffold; run it locally when touching
+`MealRepositoryImpl` or its collaborators.
 
 ## Release builds
 
@@ -223,6 +250,13 @@ current, non-reflective usage.
 There's no standalone JDK on this machine — Gradle needs
 `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home` (or
 whichever IDE is installed) when running `./gradlew` outside Android Studio.
+
+## Git commits
+
+Keep commit messages terse: a one-line summary, optionally a short bulleted
+list for genuinely distinct changes — no multi-paragraph prose, no restating
+the diff line by line. State *what* changed in a few words per item; only
+add *why* when it isn't obvious from the change itself.
 
 ## Adding a new feature
 

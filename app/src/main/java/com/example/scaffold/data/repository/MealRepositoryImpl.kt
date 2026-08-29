@@ -4,6 +4,7 @@ import com.example.scaffold.data.local.MealDao
 import com.example.scaffold.data.remote.MealApi
 import com.example.scaffold.model.Meal
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -26,6 +27,10 @@ class MealRepositoryImpl
         }
 
         override suspend fun refresh(id: String) {
+            // A recipe's instructions don't change once published, so once we have them
+            // cached there's no need to hit the network again every time the detail
+            // screen reopens.
+            if (mealDao.observeMeal(id).first()?.instructions != null) return
             val meal =
                 mealApi
                     .getMealDetail(id)
