@@ -125,10 +125,26 @@ bar updates automatically since it iterates `TopLevelDestination.entries`.
 ## Testing
 
 Prefer hand-written fakes over mocking libraries: implement the repository
-or DAO interface directly with an in-memory `MutableStateFlow` (see
-`MealRepositoryImplTest`, `MealListViewModelTest`). ViewModel tests need
+interface directly with an in-memory `MutableStateFlow` (see
+`MealListViewModelTest`, which fakes `MealRepository`). ViewModel tests need
 `MainDispatcherRule` (`app/src/test/java/com/example/scaffold/MainDispatcherRule.kt`)
 to give `viewModelScope` a `TestDispatcher` as `Dispatchers.Main`.
+
+Repository-level correctness — real JSON parsing, real Retrofit routing,
+real Room persistence — is covered by `MealRepositoryEndToEndTest`
+(`app/src/androidTest/...`) rather than a `MealApi`/`MealDao`-faking unit
+test. It wires up a real Retrofit client (the app's real `Json` config, real
+kotlinx.serialization converter) against a local `mockwebserver3.MockWebServer`
+serving canned copies of themealdb.com's actual responses, and a real
+in-memory Room database (`Room.inMemoryDatabaseBuilder`) — only the socket
+themealdb.com sits behind is substituted, everything else is the genuine
+`MealRepositoryImpl`. Don't add a fakes-based repository test alongside this
+one for the same scenarios — that duplication was tried and cut; it added
+maintenance cost with no added confidence, since this test already covers
+everything the fakes did plus real-wiring failure modes they structurally
+can't (a wrong `@Query` name, TheMealDB's real `{"meals":null}` response).
+It needs a connected device or emulator: `./gradlew
+connectedDebugAndroidTest`.
 
 `ErrorState` (`ui/components/StatusComposables.kt`) takes a nullable
 `onRetry: (() -> Unit)? = null` and only renders the Retry button when it's
