@@ -1,5 +1,9 @@
 package com.example.scaffold.ui.feature.meallist
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,13 +39,17 @@ import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
 import com.example.scaffold.ui.components.ErrorState
 import com.example.scaffold.ui.components.LoadingIndicator
+import com.example.scaffold.ui.components.sharedBoundsIfAvailable
+import com.example.scaffold.ui.components.sharedElementIfAvailable
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun MealListScreen(
     onMealClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MealListViewModel = hiltViewModel(),
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedContentScope? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -49,27 +57,35 @@ fun MealListScreen(
         modifier = modifier,
         topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_meals)) }) },
     ) { padding ->
-        when (val state = uiState) {
-            MealListUiState.Loading -> LoadingIndicator(Modifier.padding(padding))
-            is MealListUiState.Error ->
-                ErrorState(
-                    message = state.message ?: stringResource(R.string.meal_list_error_fallback),
-                    onRetry = viewModel::refresh,
-                    modifier = Modifier.padding(padding),
-                )
-            is MealListUiState.Content ->
-                Column(modifier = Modifier.padding(padding)) {
-                    CategoryPicker(
-                        selectedCategory = state.selectedCategory,
-                        onCategorySelected = viewModel::selectCategory,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        AnimatedContent(
+            targetState = uiState,
+            contentKey = { it::class },
+            modifier = Modifier.padding(padding),
+            label = "meal_list_state",
+        ) { state ->
+            when (state) {
+                MealListUiState.Loading -> LoadingIndicator()
+                is MealListUiState.Error ->
+                    ErrorState(
+                        message = state.message ?: stringResource(R.string.meal_list_error_fallback),
+                        onRetry = viewModel::refresh,
                     )
-                    MealList(
-                        meals = state.meals,
-                        onMealClick = onMealClick,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                is MealListUiState.Content ->
+                    Column {
+                        CategoryPicker(
+                            selectedCategory = state.selectedCategory,
+                            onCategorySelected = viewModel::selectCategory,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                        MealList(
+                            meals = state.meals,
+                            onMealClick = onMealClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+            }
         }
     }
 }
@@ -95,24 +111,35 @@ private fun CategoryPicker(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MealList(
     meals: List<Meal>,
     onMealClick: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedContentScope?,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
         items(items = meals, key = { it.id }) { meal ->
-            MealRow(meal = meal, onClick = { onMealClick(meal.id) })
+            MealRow(
+                meal = meal,
+                onClick = { onMealClick(meal.id) },
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MealRow(
     meal: Meal,
     onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedContentScope?,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -132,7 +159,11 @@ private fun MealRow(
                 contentScale = ContentScale.Crop,
                 modifier =
                     Modifier
-                        .size(64.dp)
+                        .sharedElementIfAvailable(
+                            key = "meal-image-${meal.id}",
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        ).size(64.dp)
                         .clip(RoundedCornerShape(8.dp)),
             )
             Text(
@@ -140,7 +171,14 @@ private fun MealRow(
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 16.dp),
+                modifier =
+                    Modifier
+                        .padding(start = 16.dp)
+                        .sharedBoundsIfAvailable(
+                            key = "meal-title-${meal.id}",
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        ),
             )
         }
     }
