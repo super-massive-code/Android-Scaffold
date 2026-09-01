@@ -6,6 +6,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
+import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,9 +31,9 @@ private class FakeMealRepository(
 
     override fun observeMeal(id: String): Flow<Meal?> = mealsFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun refresh() = Unit
-
     override suspend fun refresh(id: String) = Unit
+
+    override suspend fun refreshByCategory(category: MealCategory) = Unit
 }
 
 @RunWith(AndroidJUnit4::class)

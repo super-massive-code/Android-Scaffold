@@ -3,6 +3,7 @@ package com.example.scaffold.ui.feature.meallist
 import com.example.scaffold.MainDispatcherRule
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
+import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,12 +26,12 @@ private class FakeMealRepository(
 
     override fun observeMeal(id: String): Flow<Meal?> = mealsFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun refresh() {
+    override suspend fun refresh(id: String) = Unit
+
+    override suspend fun refreshByCategory(category: MealCategory) {
         refreshError?.let { throw it }
         mealsFlow.value = mealsAfterRefresh
     }
-
-    override suspend fun refresh(id: String) = Unit
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

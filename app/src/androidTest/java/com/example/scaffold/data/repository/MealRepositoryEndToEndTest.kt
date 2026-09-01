@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.scaffold.data.local.AppDatabase
 import com.example.scaffold.data.remote.MealApi
+import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -89,7 +90,7 @@ class MealRepositoryEndToEndTest {
                     ).build(),
             )
 
-            repository.refresh()
+            repository.refreshByCategory(MealCategory.Chicken)
 
             val request = server.takeRequest()
             assertEquals("/filter.php", request.url.encodedPath)

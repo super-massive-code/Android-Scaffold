@@ -26,4 +26,10 @@
     <string name="contact_form_action_saving">Saving…</string>
     <string name="contact_form_error_required">Required</string>
     <string name="contact_form_error_invalid_postcode">Enter a valid UK postcode</string>
+
+    <string name="meal_cat_chicken">Chicken</string>
+    <string name="meal_cat_beef">Beef</string>
+    <string name="meal_cat_dessert">Dessert</string>
+    <string name="meal_cat_seafood">Seafood</string>
+    <string name="meal_cat_vegetarian">Vegetarian</string>
 </resources>

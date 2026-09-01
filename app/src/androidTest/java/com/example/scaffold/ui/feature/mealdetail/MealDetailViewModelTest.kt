@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
+import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -32,12 +33,12 @@ private class FakeMealRepository(
 
     override fun observeMeal(id: String): Flow<Meal?> = mealsFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun refresh() = Unit
-
     override suspend fun refresh(id: String) {
         refreshError?.let { throw it }
         mealAfterRefresh?.let { mealsFlow.value = listOf(it) }
     }
+
+    override suspend fun refreshByCategory(category: MealCategory) = Unit
 }
 
 /**

@@ -16,4 +16,7 @@ interface MealDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(meals: List<MealEntity>)
+
+    @Query("DELETE FROM meals")
+    suspend fun deleteAll()
 }

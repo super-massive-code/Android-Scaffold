@@ -3,12 +3,11 @@ package com.example.scaffold.data.repository
 import com.example.scaffold.data.local.MealDao
 import com.example.scaffold.data.remote.MealApi
 import com.example.scaffold.model.Meal
+import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-
-private const val MEAL_CATEGORY = "Chicken"
 
 class MealRepositoryImpl
     @Inject
@@ -20,11 +19,6 @@ class MealRepositoryImpl
             mealDao.observeMeals().map { entities -> entities.map { it.toDomain() } }
 
         override fun observeMeal(id: String): Flow<Meal?> = mealDao.observeMeal(id).map { it?.toDomain() }
-
-        override suspend fun refresh() {
-            val meals = mealApi.getMealsByCategory(MEAL_CATEGORY).meals.orEmpty()
-            mealDao.upsertAll(meals.map { it.toEntity() })
-        }
 
         override suspend fun refresh(id: String) {
             // A recipe's instructions don't change once published, so once we have them
@@ -38,5 +32,11 @@ class MealRepositoryImpl
                     .orEmpty()
                     .firstOrNull() ?: return
             mealDao.upsertAll(listOf(meal.toEntity()))
+        }
+
+        override suspend fun refreshByCategory(category: MealCategory) {
+            mealDao.deleteAll()
+            val meals = mealApi.getMealsByCategory(category.apiValue).meals.orEmpty()
+            mealDao.upsertAll(meals.map { it.toEntity() })
         }
     }
