@@ -7,4 +7,6 @@ interface ContactRepository {
     fun observeContacts(): Flow<List<Contact>>
 
     suspend fun saveContact(contact: Contact)
+
+    suspend fun seedIfEmpty()
 }

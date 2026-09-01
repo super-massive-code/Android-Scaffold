@@ -81,7 +81,11 @@ list-level one where the backing API's list/detail payloads genuinely
 differ in shape, rather than forcing a single `refresh()` to over-fetch.
 `ContactRepository` is the local-only variant of the same pattern: no remote
 source, just a `suspend fun saveContact()` write path into Room — the
-counterpart to `MealRepository`'s read path.
+counterpart to `MealRepository`'s read path. It also owns `seedIfEmpty()`,
+called once from `ScaffoldApp.onCreate()`, so a fresh install shows the
+Contacts tab with something in it rather than the empty state — any
+"ensure the store has starting data" logic belongs behind the repository
+interface like this, not written inline in `ScaffoldApp`/`MainActivity`.
 
 **Schema changes get an explicit `Migration`, never destructive fallback.**
 Bump `@Database(version = ...)` in `AppDatabase` and add a `Migration`
@@ -109,9 +113,14 @@ routes, no manual argument bundling.
 
 The app is a 2-tab bottom-nav app (Contacts, Meals). `TopLevelDestination.kt`
 enumerates the tabs (route + label + icon); `ScaffoldNavHost` holds a single
-`NavController` and outer `Scaffold`/`NavigationBar` shared by both tabs —
-there's no per-tab back stack or nested `NavHost`. Tab switches use the
-standard `popUpTo(graph.findStartDestination().id) { saveState = true }` +
+`NavController` and a `NavigationBar` shared by both tabs — there's no
+per-tab back stack or nested `NavHost`. There's deliberately no outer
+`Scaffold`: the bar is overlaid on top of the `NavHost` inside a `Box` (with
+`AnimatedVisibility` to fade it in/out) rather than resizing the content
+area around it, so `NavHost` always fills the screen and a screen transition
+(e.g. the meal list/detail shared element) never has its coordinate space
+perturbed by the bar appearing/disappearing. Tab switches use the standard
+`popUpTo(graph.findStartDestination().id) { saveState = true }` +
 `launchSingleTop` + `restoreState` combo so each tab keeps its own scroll
 position/state when you switch away and back. The bottom bar itself is
 hidden on non-top-level destinations (`MealDetail`, `ContactForm`) via

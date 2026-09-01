@@ -25,6 +25,8 @@ private class FakeContactRepository(
     override suspend fun saveContact(contact: Contact) {
         contactsFlow.value = contactsFlow.value + contact
     }
+
+    override suspend fun seedIfEmpty() = Unit
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
