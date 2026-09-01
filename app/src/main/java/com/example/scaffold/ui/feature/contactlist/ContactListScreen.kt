@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.scaffold.R
 import com.example.scaffold.model.Contact
+import com.example.scaffold.ui.components.EmptyState
 import com.example.scaffold.ui.components.ErrorState
 import com.example.scaffold.ui.components.LoadingIndicator
 
@@ -39,7 +42,12 @@ fun ContactListScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_contacts)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.nav_contacts)) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddContactClick) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.contact_list_action_add))
@@ -64,6 +72,10 @@ private fun ContactList(
     contacts: List<Contact>,
     modifier: Modifier = Modifier,
 ) {
+    if (contacts.isEmpty()) {
+        EmptyState(message = stringResource(R.string.contact_list_empty_message), modifier = modifier)
+        return
+    }
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
         items(items = contacts, key = { it.id }) { contact ->
             ContactRow(contact = contact)
@@ -76,7 +88,10 @@ private fun ContactRow(
     contact: Contact,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.padding(vertical = 6.dp).fillMaxWidth()) {
+    Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier.padding(vertical = 6.dp).fillMaxWidth(),
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "${contact.firstName} ${contact.lastName}",

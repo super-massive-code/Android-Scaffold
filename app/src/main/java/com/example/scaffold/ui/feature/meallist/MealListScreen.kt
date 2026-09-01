@@ -14,14 +14,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import coil3.compose.AsyncImage
 import com.example.scaffold.R
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.ui.components.EmptyState
 import com.example.scaffold.ui.components.ErrorState
 import com.example.scaffold.ui.components.LoadingIndicator
 import com.example.scaffold.ui.components.sharedBoundsIfAvailable
@@ -55,7 +57,12 @@ fun MealListScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_meals)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.nav_meals)) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            )
+        },
     ) { padding ->
         AnimatedContent(
             targetState = uiState,
@@ -120,6 +127,10 @@ private fun MealList(
     animatedVisibilityScope: AnimatedContentScope?,
     modifier: Modifier = Modifier,
 ) {
+    if (meals.isEmpty()) {
+        EmptyState(message = stringResource(R.string.meal_list_empty_message), modifier = modifier)
+        return
+    }
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
         items(items = meals, key = { it.id }) { meal ->
             MealRow(
@@ -144,6 +155,7 @@ private fun MealRow(
 ) {
     Card(
         onClick = onClick,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier =
             modifier
                 .padding(vertical = 6.dp)
@@ -164,7 +176,7 @@ private fun MealRow(
                             sharedTransitionScope = sharedTransitionScope,
                             animatedVisibilityScope = animatedVisibilityScope,
                         ).size(64.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .clip(MaterialTheme.shapes.small),
             )
             Text(
                 text = meal.title,

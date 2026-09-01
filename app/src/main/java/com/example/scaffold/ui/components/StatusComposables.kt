@@ -24,6 +24,21 @@ fun LoadingIndicator(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun EmptyState(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(24.dp),
+        )
+    }
+}
+
+@Composable
 fun ErrorState(
     message: String,
     modifier: Modifier = Modifier,

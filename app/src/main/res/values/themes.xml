@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.Scaffold" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Scaffold.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Scaffold</item>
+    </style>
 </resources>

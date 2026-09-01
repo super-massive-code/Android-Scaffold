@@ -8,12 +8,14 @@
     <string name="nav_meals">Meals</string>
 
     <string name="meal_list_error_fallback">Unable to load meals</string>
+    <string name="meal_list_empty_message">No meals found in this category</string>
 
     <string name="meal_detail_title">Meal</string>
     <string name="meal_detail_error_fallback">Unable to load meal</string>
 
     <string name="contact_list_action_add">Add contact</string>
     <string name="contact_list_error_fallback">Unable to load contacts</string>
+    <string name="contact_list_empty_message">No contacts yet. Tap + to add one.</string>
 
     <string name="contact_form_title">New contact</string>
     <string name="contact_form_label_first_name">First name</string>
