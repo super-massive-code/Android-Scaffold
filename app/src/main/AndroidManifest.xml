@@ -24,6 +24,17 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- scaffold://meal/{mealId}; see MEAL_DETAIL_DEEP_LINK_BASE_PATH in ScaffoldNavHost.kt -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="meal"
+                    android:scheme="scaffold" />
+            </intent-filter>
         </activity>
     </application>
 

@@ -270,6 +270,16 @@ hidden on non-top-level destinations (`MealDetail`, `ContactForm`) via
 `currentDestination.hierarchy.any { it.hasRoute(topLevel.route::class) }` —
 detail/form screens are full-screen, not tab content.
 
+`MealDetail` is reachable by deep link: `composable<Destinations.MealDetail>`
+takes `deepLinks = listOf(navDeepLink<Destinations.MealDetail>(basePath =
+"scaffold://meal"))`, so the URL path segments come from the route class
+itself — `scaffold://meal/52772` fills in `mealId` with no string parsing and
+no drift when the route gains a field. The matching `<intent-filter>` lives on
+`MainActivity` in `AndroidManifest.xml`; the scheme/host pair is duplicated
+between the two, so the Kotlin side keeps it in a named constant that the
+manifest comment points at. Verify with
+`adb shell am start -d "scaffold://meal/52772"`.
+
 An optional screen argument is a **sentinel, not a nullable primitive**:
 `Destinations.ContactForm(val contactId: Long = NEW_CONTACT)` where
 `NEW_CONTACT` is `0L`. Type-safe routes have no `NavType` for `Long?`, and 0

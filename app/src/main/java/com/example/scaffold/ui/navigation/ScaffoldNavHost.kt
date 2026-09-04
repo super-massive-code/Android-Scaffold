@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.example.scaffold.ui.feature.contactform.ContactFormScreen
 import com.example.scaffold.ui.feature.contactlist.ContactListScreen
 import com.example.scaffold.ui.feature.mealdetail.MealDetailScreen
@@ -68,7 +69,14 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
                         animatedVisibilityScope = this,
                     )
                 }
-                composable<Destinations.MealDetail> {
+                composable<Destinations.MealDetail>(
+                    // scaffold://meal/52772 — the {mealId} segment is filled in from the route's
+                    // own field, so the deep link stays in step with the route definition.
+                    deepLinks =
+                        listOf(
+                            navDeepLink<Destinations.MealDetail>(basePath = MEAL_DETAIL_DEEP_LINK_BASE_PATH),
+                        ),
+                ) {
                     MealDetailScreen(
                         onBack = { navController.popBackStack() },
                         sharedTransitionScope = this@SharedTransitionLayout,
@@ -110,3 +118,6 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
         }
     }
 }
+
+/** Keep in sync with the `<intent-filter>` on `MainActivity` in `AndroidManifest.xml`. */
+private const val MEAL_DETAIL_DEEP_LINK_BASE_PATH = "scaffold://meal"
