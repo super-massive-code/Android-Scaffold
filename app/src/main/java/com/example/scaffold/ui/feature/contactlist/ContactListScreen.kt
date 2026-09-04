@@ -212,12 +212,15 @@ private fun ContactRow(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "${contact.firstName} ${contact.lastName}",
+                text = stringResource(R.string.contact_list_full_name, contact.firstName, contact.lastName),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(text = contact.addressLine1, style = MaterialTheme.typography.bodyMedium)
             contact.addressLine2?.let { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
-            Text(text = "${contact.city} ${contact.postcode}", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = stringResource(R.string.contact_list_city_postcode, contact.city, contact.postcode),
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }

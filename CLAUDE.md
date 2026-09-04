@@ -350,6 +350,11 @@ messages thrown internally) are exempt.
   www.themealdb.com" is a log line: untranslatable, and not something a
   user can act on. A new failure worth its own wording gets a new `UiError`
   case and its own string, not a `String` field.
+- **User-visible text assembled from parts uses a format resource**, never a
+  Kotlin string template: `stringResource(R.string.contact_list_full_name,
+  first, last)`, not `"$first $last"`. Word order, separators and spacing
+  differ by locale, and a template hard-codes English ones into Kotlin where
+  no translator can reach them.
 - Name resources `<feature>_<kind>_<descriptor>`
   (`contact_form_label_first_name`, `contact_form_error_required`). Reuse
   one resource for identical text used for the same concept in more than

@@ -19,6 +19,8 @@
     <string name="contact_list_action_add">Add contact</string>
     <string name="contact_list_action_delete">Delete contact</string>
     <string name="contact_list_deleted">Contact deleted</string>
+    <string name="contact_list_full_name">%1$s %2$s</string>
+    <string name="contact_list_city_postcode">%1$s %2$s</string>
     <string name="contact_list_empty_message">No contacts yet. Tap + to add one.</string>
 
     <string name="contact_form_title">New contact</string>
