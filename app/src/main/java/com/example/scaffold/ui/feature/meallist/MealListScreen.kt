@@ -74,7 +74,7 @@ fun MealListScreen(
                 MealListUiState.Loading -> LoadingIndicator()
                 is MealListUiState.Error ->
                     ErrorState(
-                        message = state.message ?: stringResource(R.string.meal_list_error_fallback),
+                        message = stringResource(state.error.messageRes),
                         onRetry = viewModel::refresh,
                     )
                 is MealListUiState.Content ->

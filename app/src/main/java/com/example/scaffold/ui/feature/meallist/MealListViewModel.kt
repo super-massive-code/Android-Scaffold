@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.ui.components.toUiError
 import com.example.scaffold.util.runSuspendCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -48,7 +49,7 @@ class MealListViewModel
             ) { meals, status, category ->
                 when {
                     meals.isNotEmpty() -> MealListUiState.Content(meals, category)
-                    status is RefreshStatus.Failed -> MealListUiState.Error(status.throwable.message)
+                    status is RefreshStatus.Failed -> MealListUiState.Error(status.throwable.toUiError())
                     status is RefreshStatus.InFlight -> MealListUiState.Loading
                     else -> MealListUiState.Content(meals, category)
                 }

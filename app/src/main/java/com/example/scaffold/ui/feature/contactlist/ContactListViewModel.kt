@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.scaffold.data.repository.ContactRepository
 import com.example.scaffold.model.Contact
+import com.example.scaffold.ui.components.toUiError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +25,7 @@ class ContactListViewModel
             contactRepository
                 .observeContacts()
                 .map<List<Contact>, ContactListUiState> { contacts -> ContactListUiState.Content(contacts) }
-                .catch { throwable -> emit(ContactListUiState.Error(throwable.message)) }
+                .catch { throwable -> emit(ContactListUiState.Error(throwable.toUiError())) }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),

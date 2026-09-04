@@ -1,20 +1,21 @@
 <resources>
     <string name="app_name">Scaffold</string>
 
+    <string name="error_network">No connection. Check your network and try again.</string>
+    <string name="error_server">The server is having trouble. Try again shortly.</string>
+    <string name="error_unknown">Something went wrong. Try again.</string>
+
     <string name="action_back">Back</string>
     <string name="action_retry">Retry</string>
 
     <string name="nav_contacts">Contacts</string>
     <string name="nav_meals">Meals</string>
 
-    <string name="meal_list_error_fallback">Unable to load meals</string>
     <string name="meal_list_empty_message">No meals found in this category</string>
 
     <string name="meal_detail_title">Meal</string>
-    <string name="meal_detail_error_fallback">Unable to load meal</string>
 
     <string name="contact_list_action_add">Add contact</string>
-    <string name="contact_list_error_fallback">Unable to load contacts</string>
     <string name="contact_list_empty_message">No contacts yet. Tap + to add one.</string>
 
     <string name="contact_form_title">New contact</string>

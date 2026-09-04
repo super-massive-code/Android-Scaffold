@@ -4,6 +4,7 @@ import com.example.scaffold.MainDispatcherRule
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.ui.components.UiError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +78,7 @@ class MealListViewModelTest {
 
             val state = viewModel.uiState.value
             assertTrue(state is MealListUiState.Error)
-            assertEquals("boom", (state as MealListUiState.Error).message)
+            assertEquals(UiError.Unknown, (state as MealListUiState.Error).error)
         }
 
     @Test

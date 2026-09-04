@@ -6,6 +6,8 @@ conventions in this and derived projects.
 
 ## Don'ts
 
+- **Never put an exception's `message` in a UiState** — map it to a
+  `UiError` so the user sees localised, actionable text. See Strings.
 - **Never `runCatching` around a suspend call** — it swallows
   `CancellationException` and breaks structured concurrency. Use
   `runSuspendCatching` from `util/` instead.
@@ -213,14 +215,16 @@ messages thrown internally) are exempt.
   can't call `stringResource()` itself) and `ContactFormUiState`'s per-field
   errors. A ViewModel never injects `Context`/`Application` just to resolve
   a string.
-- A sealed `Error(message: String?)` case that can carry either a live
-  exception's message *or* a static fallback stays nullable all the way
-  through the ViewModel (`MealListUiState.Error(throwable.message)`, no
-  `?:` in the ViewModel) — the Composable supplies the fallback:
-  `state.message ?: stringResource(R.string.meal_list_error_fallback)`.
-  This is the one place a `String?` (not a resource id) flows out of a
-  ViewModel, because the live exception text is inherently dynamic content
-  that can never itself be a resource.
+- **No exception text ever reaches the UI.** A sealed `Error` case carries
+  a `UiError` (`ui/components/UiError.kt`) — `Network`, `Server` or
+  `Unknown`, each with a `@StringRes messageRes` — never a `String`
+  message. ViewModels map with `throwable.toUiError()`
+  (`IOException` -> `Network`, `HttpException` -> `Server`, else
+  `Unknown`), and the Composable renders
+  `stringResource(state.error.messageRes)`. "Unable to resolve host
+  www.themealdb.com" is a log line: untranslatable, and not something a
+  user can act on. A new failure worth its own wording gets a new `UiError`
+  case and its own string, not a `String` field.
 - Name resources `<feature>_<kind>_<descriptor>`
   (`contact_form_label_first_name`, `contact_form_error_required`). Reuse
   one resource for identical text used for the same concept in more than

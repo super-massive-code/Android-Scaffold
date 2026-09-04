@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.scaffold.data.repository.MealRepository
+import com.example.scaffold.ui.components.toUiError
 import com.example.scaffold.ui.navigation.Destinations
 import com.example.scaffold.util.runSuspendCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,7 +50,7 @@ class MealDetailViewModel
                 runSuspendCatching { mealRepository.refresh(mealId) }
                     .onFailure { throwable ->
                         if (_uiState.value !is MealDetailUiState.Content) {
-                            _uiState.value = MealDetailUiState.Error(throwable.message)
+                            _uiState.value = MealDetailUiState.Error(throwable.toUiError())
                         }
                     }
             }

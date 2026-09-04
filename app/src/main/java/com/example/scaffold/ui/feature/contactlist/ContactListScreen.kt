@@ -58,7 +58,7 @@ fun ContactListScreen(
             ContactListUiState.Loading -> LoadingIndicator(Modifier.padding(padding))
             is ContactListUiState.Error ->
                 ErrorState(
-                    message = state.message ?: stringResource(R.string.contact_list_error_fallback),
+                    message = stringResource(state.error.messageRes),
                     modifier = Modifier.padding(padding),
                 )
             is ContactListUiState.Content ->

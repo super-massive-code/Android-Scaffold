@@ -82,7 +82,7 @@ fun MealDetailScreen(
                 MealDetailUiState.Loading -> LoadingIndicator()
                 is MealDetailUiState.Error ->
                     ErrorState(
-                        message = state.message ?: stringResource(R.string.meal_detail_error_fallback),
+                        message = stringResource(state.error.messageRes),
                         onRetry = viewModel::refresh,
                     )
                 is MealDetailUiState.Content ->

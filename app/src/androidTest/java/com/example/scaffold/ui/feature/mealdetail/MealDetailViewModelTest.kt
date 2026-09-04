@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.ui.components.UiError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -102,6 +103,6 @@ class MealDetailViewModelTest {
 
             val state = viewModel.uiState.value
             assertTrue(state is MealDetailUiState.Error)
-            assertEquals("boom", (state as MealDetailUiState.Error).message)
+            assertEquals(UiError.Unknown, (state as MealDetailUiState.Error).error)
         }
 }
