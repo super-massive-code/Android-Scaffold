@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the whole AndroidX/Compose surface: they're released together and
+      # split PRs would each fail CI on the others' version skew.
+      androidx:
+        patterns:
+          - "androidx.*"
+          - "com.android.*"
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
