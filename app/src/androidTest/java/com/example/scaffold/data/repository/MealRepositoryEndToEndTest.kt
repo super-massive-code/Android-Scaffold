@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.example.scaffold.data.local.AppDatabase
 import com.example.scaffold.data.remote.MealApi
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.util.runSuspendCatching
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -129,7 +130,7 @@ class MealRepositoryEndToEndTest {
             repository.refreshByCategory(MealCategory.Chicken)
 
             server.enqueue(MockResponse.Builder().code(500).build())
-            val failure = runCatching { repository.refreshByCategory(MealCategory.Beef) }.exceptionOrNull()
+            val failure = runSuspendCatching { repository.refreshByCategory(MealCategory.Beef) }.exceptionOrNull()
 
             assertNotNull(failure)
             val meals = repository.observeMeals().first()

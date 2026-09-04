@@ -4,6 +4,12 @@ A personal base Android project used as a reference template: clone/copy this
 structure when starting a new app, and use it as the source of truth for
 conventions in this and derived projects.
 
+## Don'ts
+
+- **Never `runCatching` around a suspend call** — it swallows
+  `CancellationException` and breaks structured concurrency. Use
+  `runSuspendCatching` from `util/` instead.
+
 ## Stack
 
 - Kotlin 2.2.10, AGP 9.3.2 (new declarative DSL, built-in Kotlin compilation
@@ -15,7 +21,8 @@ conventions in this and derived projects.
 - detekt + ktlint for static analysis/formatting
 
 Single `:app` module — no multi-module split. Package-by-layer at the top
-level (`data`, `di`, `model`, `ui`), package-by-feature inside `ui.feature`.
+level (`data`, `di`, `model`, `ui`, `util`), package-by-feature inside
+`ui.feature`.
 
 ## Architecture: MVVM + unidirectional data flow
 
@@ -31,6 +38,13 @@ Each feature under `ui/feature/<name>/` has three files:
   default param, collects state with `collectAsStateWithLifecycle()`, and
   `when`s over the UI state. Navigation callbacks (`onBack`, `onXClick`) are
   passed in as lambdas from the nav graph, not resolved inside the screen.
+
+A ViewModel that wraps a repository call for its error path uses
+`runSuspendCatching` (`util/RunSuspendCatching.kt`), never `runCatching`:
+the former rethrows `CancellationException` so a superseded refresh (the
+`refreshJob` a new `selectCategory` cancels) doesn't surface as an error the
+user sees. Anything else — `IOException`, `HttpException`, a serialization
+failure — comes back as a `Result.failure` to be mapped into the UI state.
 
 Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable

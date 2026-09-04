@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.MealCategory
+import com.example.scaffold.util.runSuspendCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +70,7 @@ class MealListViewModel
             refreshJob?.cancel()
             refreshJob =
                 viewModelScope.launch {
-                    runCatching { mealRepository.refreshByCategory(category) }
+                    runSuspendCatching { mealRepository.refreshByCategory(category) }
                         .onSuccess { refreshStatus.value = RefreshStatus.Idle }
                         .onFailure { throwable -> refreshStatus.value = RefreshStatus.Failed(throwable) }
                 }

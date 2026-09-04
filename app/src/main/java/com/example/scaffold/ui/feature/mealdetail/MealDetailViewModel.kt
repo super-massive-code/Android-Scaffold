@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.ui.navigation.Destinations
+import com.example.scaffold.util.runSuspendCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +46,7 @@ class MealDetailViewModel
 
         fun refresh() {
             viewModelScope.launch {
-                runCatching { mealRepository.refresh(mealId) }
+                runSuspendCatching { mealRepository.refresh(mealId) }
                     .onFailure { throwable ->
                         if (_uiState.value !is MealDetailUiState.Content) {
                             _uiState.value = MealDetailUiState.Error(throwable.message)
