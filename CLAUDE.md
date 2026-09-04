@@ -39,10 +39,14 @@ Each feature under `ui/feature/<name>/` has three files:
 - `<Name>ViewModel.kt` — `@HiltViewModel`, exposes a single
   `StateFlow<UiState>`, no other public surface besides user-triggered
   actions (e.g. `refresh()`).
-- `<Name>Screen.kt` — `@Composable`, takes a `viewModel: X = hiltViewModel()`
-  default param, collects state with `collectAsStateWithLifecycle()`, and
-  `when`s over the UI state. Navigation callbacks (`onBack`, `onXClick`) are
-  passed in as lambdas from the nav graph, not resolved inside the screen.
+- `<Name>Screen.kt` — **two public overloads of the same name.** The
+  *stateful* one takes `viewModel: X = hiltViewModel()`, collects state with
+  `collectAsStateWithLifecycle()`, and delegates to the *stateless* one,
+  which takes `uiState: XUiState` plus a lambda per user action and `when`s
+  over the state. Navigation callbacks (`onBack`, `onXClick`) are passed in
+  as lambdas from the nav graph, not resolved inside the screen.
+- `<Name>ScreenPreviews.kt` — one `@PreviewLightDark` per UiState case,
+  wrapped in `ScaffoldTheme`, calling the stateless overload.
 
 A ViewModel that wraps a repository call for its error path uses
 `runSuspendCatching` (`util/RunSuspendCatching.kt`), never `runCatching`:
@@ -50,6 +54,14 @@ the former rethrows `CancellationException` so a superseded refresh (the
 `refreshJob` a new `selectCategory` cancels) doesn't surface as an error the
 user sees. Anything else — `IOException`, `HttpException`, a serialization
 failure — comes back as a `Result.failure` to be mapped into the UI state.
+
+**The stateless overload is the unit of preview and test; the stateful one
+is the unit of navigation.** Only the stateful wrapper knows a ViewModel
+exists (and owns effects that navigate, like the form's
+`LaunchedEffect(uiState.isSubmitted) { onBack() }`), so everything below it
+is reachable from a `@Preview` and from a Compose UI test with a literal
+UiState — no Hilt, no fake repository, no coroutines. Anything the body
+needs from the ViewModel arrives as a parameter: state in, callbacks out.
 
 Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable
@@ -221,13 +233,12 @@ for this reason, alongside `MealRepositoryEndToEndTest`, and sets
 real device's `Dispatchers.Main` is the actual main-looper dispatcher, not
 something `advanceUntilIdle()` can drive on its own.
 
-Compose UI tests (`MealListScreenTest`) don't need Hilt test infrastructure:
-every `<Name>Screen` already accepts an explicit `viewModel` parameter
-(default `= hiltViewModel()`), so a test can construct a real ViewModel
-directly against a hand-written fake repository — the same fakes used in
-the ViewModel unit tests — and pass it straight in, exercising the actual
-Composable through Compose's real rendering/click handling with no DI
-involved.
+Compose UI tests (`MealListScreenTest`) drive the stateless `<Name>Screen`
+overload directly with a literal UiState and record what its callbacks were
+handed. No Hilt, no ViewModel, no fake repository — the Composable is
+exercised through Compose's real rendering/click handling, and what the
+ViewModel does in response to those callbacks is the ViewModel test's
+subject, not this one's.
 
 `ErrorState` (`ui/components/StatusComposables.kt`) takes a nullable
 `onRetry: (() -> Unit)? = null` and only renders the Retry button when it's

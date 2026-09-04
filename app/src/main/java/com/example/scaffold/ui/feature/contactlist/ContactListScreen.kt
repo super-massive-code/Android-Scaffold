@@ -31,7 +31,7 @@ import com.example.scaffold.ui.components.EmptyState
 import com.example.scaffold.ui.components.ErrorState
 import com.example.scaffold.ui.components.LoadingIndicator
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** See `MealListScreen` for why each screen is a stateful wrapper over a stateless body. */
 @Composable
 fun ContactListScreen(
     onAddContactClick: () -> Unit,
@@ -40,6 +40,20 @@ fun ContactListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    ContactListScreen(
+        uiState = uiState,
+        onAddContactClick = onAddContactClick,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ContactListScreen(
+    uiState: ContactListUiState,
+    onAddContactClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -54,15 +68,15 @@ fun ContactListScreen(
             }
         },
     ) { padding ->
-        when (val state = uiState) {
+        when (uiState) {
             ContactListUiState.Loading -> LoadingIndicator(Modifier.padding(padding))
             is ContactListUiState.Error ->
                 ErrorState(
-                    message = stringResource(state.error.messageRes),
+                    message = stringResource(uiState.error.messageRes),
                     modifier = Modifier.padding(padding),
                 )
             is ContactListUiState.Content ->
-                ContactList(contacts = state.contacts, modifier = Modifier.padding(padding))
+                ContactList(contacts = uiState.contacts, modifier = Modifier.padding(padding))
         }
     }
 }

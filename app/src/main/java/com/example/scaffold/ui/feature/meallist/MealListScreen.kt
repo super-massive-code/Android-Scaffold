@@ -48,7 +48,10 @@ import com.example.scaffold.ui.components.LoadingIndicator
 import com.example.scaffold.ui.components.sharedBoundsIfAvailable
 import com.example.scaffold.ui.components.sharedElementIfAvailable
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+/**
+ * The unit of navigation: everything that needs a ViewModel lives here, and nothing else does.
+ * The stateless overload below is what previews and UI tests drive.
+ */
 @Composable
 fun MealListScreen(
     onMealClick: (String) -> Unit,
@@ -58,6 +61,32 @@ fun MealListScreen(
     animatedVisibilityScope: AnimatedContentScope? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    MealListScreen(
+        uiState = uiState,
+        onMealClick = onMealClick,
+        onCategorySelected = viewModel::selectCategory,
+        onRetry = viewModel::refresh,
+        onTransientErrorShown = viewModel::dismissTransientError,
+        modifier = modifier,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Suppress("LongParameterList")
+@Composable
+fun MealListScreen(
+    uiState: MealListUiState,
+    onMealClick: (String) -> Unit,
+    onCategorySelected: (MealCategory) -> Unit,
+    onRetry: () -> Unit,
+    onTransientErrorShown: () -> Unit,
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedContentScope? = null,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val transientError = (uiState as? MealListUiState.Content)?.transientError
     val transientErrorMessage = transientError?.let { stringResource(it.messageRes) }
@@ -65,7 +94,7 @@ fun MealListScreen(
     LaunchedEffect(transientError) {
         if (transientErrorMessage != null) {
             snackbarHostState.showSnackbar(transientErrorMessage)
-            viewModel.dismissTransientError()
+            onTransientErrorShown()
         }
     }
 
@@ -90,13 +119,13 @@ fun MealListScreen(
                 is MealListUiState.Error ->
                     ErrorState(
                         message = stringResource(state.error.messageRes),
-                        onRetry = viewModel::refresh,
+                        onRetry = onRetry,
                     )
                 is MealListUiState.Content ->
                     Column {
                         CategoryPicker(
                             selectedCategory = state.selectedCategory,
-                            onCategorySelected = viewModel::selectCategory,
+                            onCategorySelected = onCategorySelected,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                         MealList(

@@ -32,7 +32,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.scaffold.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** See `MealListScreen` for why each screen is a stateful wrapper over a stateless body. */
 @Composable
 fun ContactFormScreen(
     onBack: () -> Unit,
@@ -45,19 +45,48 @@ fun ContactFormScreen(
         if (uiState.isSubmitted) onBack()
     }
 
+    ContactFormScreen(
+        uiState = uiState,
+        onBack = onBack,
+        onFirstNameChange = viewModel::onFirstNameChange,
+        onLastNameChange = viewModel::onLastNameChange,
+        onAddressLine1Change = viewModel::onAddressLine1Change,
+        onAddressLine2Change = viewModel::onAddressLine2Change,
+        onCityChange = viewModel::onCityChange,
+        onPostcodeChange = viewModel::onPostcodeChange,
+        onSubmit = viewModel::submit,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LongParameterList")
+@Composable
+fun ContactFormScreen(
+    uiState: ContactFormUiState,
+    onBack: () -> Unit,
+    onFirstNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
+    onAddressLine1Change: (String) -> Unit,
+    onAddressLine2Change: (String) -> Unit,
+    onCityChange: (String) -> Unit,
+    onPostcodeChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         topBar = { ContactFormTopBar(onBack = onBack) },
     ) { padding ->
         ContactFormFields(
             uiState = uiState,
-            onFirstNameChange = viewModel::onFirstNameChange,
-            onLastNameChange = viewModel::onLastNameChange,
-            onAddressLine1Change = viewModel::onAddressLine1Change,
-            onAddressLine2Change = viewModel::onAddressLine2Change,
-            onCityChange = viewModel::onCityChange,
-            onPostcodeChange = viewModel::onPostcodeChange,
-            onSubmit = viewModel::submit,
+            onFirstNameChange = onFirstNameChange,
+            onLastNameChange = onLastNameChange,
+            onAddressLine1Change = onAddressLine1Change,
+            onAddressLine2Change = onAddressLine2Change,
+            onCityChange = onCityChange,
+            onPostcodeChange = onPostcodeChange,
+            onSubmit = onSubmit,
             modifier = Modifier.padding(padding),
         )
     }

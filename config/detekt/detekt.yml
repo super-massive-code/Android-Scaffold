@@ -3,6 +3,10 @@ config:
   warningsAsErrors: false
 
 style:
+  # @Preview functions are entry points for the IDE/screenshot tooling, never called by us.
+  UnusedPrivateMember:
+    active: true
+    ignoreAnnotated: ["Preview", "PreviewLightDark"]
   MagicNumber:
     active: true
     ignoreAnnotated: ["Composable"]

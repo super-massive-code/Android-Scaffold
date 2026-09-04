@@ -46,7 +46,7 @@ import com.example.scaffold.ui.components.sharedBoundsIfAvailable
 import com.example.scaffold.ui.components.sharedElementIfAvailable
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+/** See `MealListScreen` for why each screen is a stateful wrapper over a stateless body. */
 @Composable
 fun MealDetailScreen(
     onBack: () -> Unit,
@@ -56,6 +56,30 @@ fun MealDetailScreen(
     animatedVisibilityScope: AnimatedContentScope? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    MealDetailScreen(
+        uiState = uiState,
+        onBack = onBack,
+        onRetry = viewModel::refresh,
+        onTransientErrorShown = viewModel::dismissTransientError,
+        modifier = modifier,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Suppress("LongParameterList")
+@Composable
+fun MealDetailScreen(
+    uiState: MealDetailUiState,
+    onBack: () -> Unit,
+    onRetry: () -> Unit,
+    onTransientErrorShown: () -> Unit,
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedContentScope? = null,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val transientError = (uiState as? MealDetailUiState.Content)?.transientError
     val transientErrorMessage = transientError?.let { stringResource(it.messageRes) }
@@ -63,7 +87,7 @@ fun MealDetailScreen(
     LaunchedEffect(transientError) {
         if (transientErrorMessage != null) {
             snackbarHostState.showSnackbar(transientErrorMessage)
-            viewModel.dismissTransientError()
+            onTransientErrorShown()
         }
     }
 
@@ -96,7 +120,7 @@ fun MealDetailScreen(
                 is MealDetailUiState.Error ->
                     ErrorState(
                         message = stringResource(state.error.messageRes),
-                        onRetry = viewModel::refresh,
+                        onRetry = onRetry,
                     )
                 is MealDetailUiState.Content ->
                     MealDetailBody(
