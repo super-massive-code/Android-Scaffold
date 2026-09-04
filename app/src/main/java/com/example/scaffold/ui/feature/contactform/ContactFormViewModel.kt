@@ -2,8 +2,10 @@ package com.example.scaffold.ui.feature.contactform
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.scaffold.R
 import com.example.scaffold.data.repository.ContactRepository
 import com.example.scaffold.model.Contact
+import com.example.scaffold.util.runSuspendCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,14 +46,20 @@ class ContactFormViewModel
                         addressLine1Error = requiredFieldError(it.addressLine1),
                         cityError = requiredFieldError(it.city),
                         postcodeError = postcodeError(it.postcode),
+                        submitError = null,
                     )
                 }
             if (validated.hasErrors) return
 
             _uiState.update { it.copy(isSubmitting = true) }
             viewModelScope.launch {
-                contactRepository.saveContact(validated.toContact())
-                _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
+                runSuspendCatching { contactRepository.saveContact(validated.toContact()) }
+                    .onSuccess { _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) } }
+                    .onFailure {
+                        _uiState.update {
+                            it.copy(isSubmitting = false, submitError = R.string.contact_form_error_save_failed)
+                        }
+                    }
             }
         }
     }

@@ -17,13 +17,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-private class FakeContactRepository : ContactRepository {
+private class FakeContactRepository(
+    private val saveError: Throwable? = null,
+) : ContactRepository {
     val savedContacts = mutableListOf<Contact>()
     private val contactsFlow = MutableStateFlow<List<Contact>>(emptyList())
 
     override fun observeContacts(): Flow<List<Contact>> = contactsFlow.asStateFlow()
 
     override suspend fun saveContact(contact: Contact) {
+        saveError?.let { throw it }
         savedContacts += contact
         contactsFlow.value = savedContacts.toList()
     }
@@ -91,4 +94,48 @@ class ContactFormViewModelTest {
             assertEquals(1, repository.savedContacts.size)
             assertEquals("SW1A 1AA", repository.savedContacts.single().postcode)
         }
+
+    @Test
+    fun `a failed save reports submitError and leaves the form on screen`() =
+        runTest {
+            val repository = FakeContactRepository(saveError = IllegalStateException("disk full"))
+            val viewModel = ContactFormViewModel(repository)
+            viewModel.fillInAValidContact()
+
+            viewModel.submit()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(R.string.contact_form_error_save_failed, state.submitError)
+            assertFalse(state.isSubmitting)
+            assertFalse(state.isSubmitted)
+        }
+
+    @Test
+    fun `re-submitting clears the previous save failure`() =
+        runTest {
+            val repository = FakeContactRepository(saveError = IllegalStateException("disk full"))
+            val viewModel = ContactFormViewModel(repository)
+            viewModel.fillInAValidContact()
+            viewModel.submit()
+            advanceUntilIdle()
+
+            // Blanking a field means the second submit stops at validation, so the stale save
+            // failure has to have been cleared by submit() itself, not by a successful save.
+            viewModel.onFirstNameChange("")
+            viewModel.submit()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertNull(state.submitError)
+            assertEquals(R.string.contact_form_error_required, state.firstNameError)
+        }
+}
+
+private fun ContactFormViewModel.fillInAValidContact() {
+    onFirstNameChange("Ada")
+    onLastNameChange("Lovelace")
+    onAddressLine1Change("12 Kingsway")
+    onCityChange("London")
+    onPostcodeChange("SW1A 1AA")
 }

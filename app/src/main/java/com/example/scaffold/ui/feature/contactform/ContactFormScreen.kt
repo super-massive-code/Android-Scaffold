@@ -1,5 +1,6 @@
 package com.example.scaffold.ui.feature.contactform
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -153,18 +154,34 @@ private fun ContactFormFields(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
             modifier = Modifier.fillMaxWidth(),
         )
-        Button(
-            onClick = onSubmit,
-            enabled = !uiState.isSubmitting,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            val saveLabelRes =
-                if (uiState.isSubmitting) {
-                    R.string.contact_form_action_saving
-                } else {
-                    R.string.contact_form_action_save
-                }
-            Text(stringResource(saveLabelRes))
-        }
+        SubmitButton(
+            submitError = uiState.submitError,
+            isSubmitting = uiState.isSubmitting,
+            onSubmit = onSubmit,
+        )
+    }
+}
+
+@Composable
+private fun SubmitButton(
+    @StringRes submitError: Int?,
+    isSubmitting: Boolean,
+    onSubmit: () -> Unit,
+) {
+    submitError?.let {
+        Text(
+            text = stringResource(it),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    Button(
+        onClick = onSubmit,
+        enabled = !isSubmitting,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        val saveLabelRes =
+            if (isSubmitting) R.string.contact_form_action_saving else R.string.contact_form_action_save
+        Text(stringResource(saveLabelRes))
     }
 }

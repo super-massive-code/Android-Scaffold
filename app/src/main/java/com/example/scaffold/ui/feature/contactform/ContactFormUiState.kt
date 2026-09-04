@@ -19,9 +19,11 @@ data class ContactFormUiState(
     @param:StringRes val addressLine1Error: Int? = null,
     @param:StringRes val cityError: Int? = null,
     @param:StringRes val postcodeError: Int? = null,
+    @param:StringRes val submitError: Int? = null,
     val isSubmitting: Boolean = false,
     val isSubmitted: Boolean = false,
 ) {
+    /** Field-level errors only: [submitError] is about the save itself, not about a field. */
     val hasErrors: Boolean
         get() =
             listOf(firstNameError, lastNameError, addressLine1Error, cityError, postcodeError)

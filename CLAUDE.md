@@ -83,6 +83,15 @@ before calling the repository. The screen navigates back via a
 `LaunchedEffect(uiState.isSubmitted)`, not a callback threaded through the
 ViewModel.
 
+The write itself can fail too, so the same state carries a
+`@StringRes submitError: Int?`: `submit()` clears it as part of validation,
+`runSuspendCatching` around the repository call sets it (and puts
+`isSubmitting` back to `false`) on failure, and the screen renders it as a
+`Text` in `MaterialTheme.colorScheme.error` above the Save button. It's a
+`@StringRes`, not the `UiError` a read screen uses, because a local write
+has one thing to say and no exception detail worth mapping — the form stays
+on screen with the user's input intact so they can retry.
+
 Form validation itself lives in a co-located `<Name>FormValidation.kt` —
 top-level pure functions (not a wrapper object; no shared state to justify
 one, same style as `MealMappers.kt`/`ContactMappers.kt`) that take a raw
