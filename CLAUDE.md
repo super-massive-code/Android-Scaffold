@@ -374,6 +374,31 @@ into pure functions and unit test it there. `ContactFormValidationTest` has
 by far the most cases of any test in the project and needs no runtime at all,
 because the rules are top-level functions over a `String`.
 
+**Compose Preview Screenshot Testing doesn't work on this toolchain** —
+evaluated at AGP 9.3.2 / Gradle 9.5 / Kotlin 2.2.10 / KSP 2.2.10-2.0.2 with
+`com.android.compose.screenshot:0.0.1-alpha16`, and abandoned. Don't retry it
+blind; retry it when the plugin has a non-alpha release or documents KSP2
+support. What happens, in order:
+
+1. The plugin refuses to apply until `android.experimental.enableScreenshotTest=true`
+   is in `gradle.properties` *and* `experimentalProperties["android.experimental
+   .enableScreenshotTest"] = true` is in the module's `android {}` block. Each
+   error names only one of the two.
+2. `updateDebugScreenshotTest` then fails under Gradle 9 with "the test task did
+   not discover any tests", which needs `failOnNoDiscoveredTests = false` on the
+   task to get past.
+3. With that silenced the task succeeds but renders nothing:
+   `build/outputs/screenshotTest-results/preview/debug/rendered` stays empty and
+   no reference PNGs are written. The `@Preview` functions are compiled (their
+   classes are in `build/intermediates/.../debugScreenshotTest`), so it's the
+   plugin's KSP-based preview discovery that finds nothing — tried both
+   `src/screenshotTest/kotlin` and `src/screenshotTest/java`, top-level private
+   functions and public methods on a class. KSP 2.2.10-2.0.2 is KSP2-only and
+   the plugin's processor appears not to support it.
+
+Until then, `<Name>ScreenPreviews.kt` files are for looking at in the IDE, and
+rendering correctness is not covered by an automated test.
+
 **Compose UI tests can't assert past a list item being removed** on this
 toolchain: `waitForIdle()` after an item leaves a `LazyColumn` never returns
 ("ComposeIdlingResource is busy due to pending measure/layout"), and it
