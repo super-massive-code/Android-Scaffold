@@ -19,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -54,9 +56,20 @@ fun MealDetailScreen(
     animatedVisibilityScope: AnimatedContentScope? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val transientError = (uiState as? MealDetailUiState.Content)?.transientError
+    val transientErrorMessage = transientError?.let { stringResource(it.messageRes) }
+
+    LaunchedEffect(transientError) {
+        if (transientErrorMessage != null) {
+            snackbarHostState.showSnackbar(transientErrorMessage)
+            viewModel.dismissTransientError()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.meal_detail_title)) },

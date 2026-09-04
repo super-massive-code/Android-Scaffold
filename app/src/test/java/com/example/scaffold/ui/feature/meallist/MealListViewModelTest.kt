@@ -14,17 +14,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 private class FakeMealRepository(
+    initialMeals: List<Meal> = emptyList(),
     private val mealsAfterRefresh: List<Meal> = emptyList(),
     private val refreshError: Throwable? = null,
     private val mealsByCategory: Map<MealCategory, List<Meal>> = emptyMap(),
     private val refreshDelayByCategory: Map<MealCategory, Long> = emptyMap(),
 ) : MealRepository {
-    private val mealsFlow = MutableStateFlow<List<Meal>>(emptyList())
+    private val mealsFlow = MutableStateFlow(initialMeals)
 
     override fun observeMeals(): Flow<List<Meal>> = mealsFlow.asStateFlow()
 
@@ -105,5 +108,26 @@ class MealListViewModelTest {
             assertTrue(state is MealListUiState.Content)
             assertEquals(listOf(beef), (state as MealListUiState.Content).meals)
             assertEquals(MealCategory.Beef, state.selectedCategory)
+        }
+
+    @Test
+    fun `a failed refresh over cached meals becomes a transient error, not an error screen`() =
+        runTest {
+            val meal = Meal(id = "1", title = "Cake", thumbnailUrl = "https://example.com/cake.jpg")
+            val viewModel =
+                MealListViewModel(
+                    FakeMealRepository(initialMeals = listOf(meal), refreshError = IOException("offline")),
+                )
+
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is MealListUiState.Content)
+            assertEquals(listOf(meal), (state as MealListUiState.Content).meals)
+            assertEquals(UiError.Network, state.transientError)
+
+            viewModel.dismissTransientError()
+
+            assertNull((viewModel.uiState.value as MealListUiState.Content).transientError)
         }
 }

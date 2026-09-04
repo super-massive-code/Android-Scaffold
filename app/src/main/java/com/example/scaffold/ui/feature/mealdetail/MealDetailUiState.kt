@@ -10,7 +10,9 @@ sealed interface MealDetailUiState {
         val error: UiError,
     ) : MealDetailUiState
 
+    /** See `MealListUiState.Content` for what [transientError] is for. */
     data class Content(
         val meal: Meal,
+        val transientError: UiError? = null,
     ) : MealDetailUiState
 }

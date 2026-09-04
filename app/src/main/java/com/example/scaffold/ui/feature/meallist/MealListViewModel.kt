@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -48,7 +49,12 @@ class MealListViewModel
                 selectedCategory,
             ) { meals, status, category ->
                 when {
-                    meals.isNotEmpty() -> MealListUiState.Content(meals, category)
+                    meals.isNotEmpty() ->
+                        MealListUiState.Content(
+                            meals = meals,
+                            selectedCategory = category,
+                            transientError = (status as? RefreshStatus.Failed)?.throwable?.toUiError(),
+                        )
                     status is RefreshStatus.Failed -> MealListUiState.Error(status.throwable.toUiError())
                     status is RefreshStatus.InFlight -> MealListUiState.Loading
                     else -> MealListUiState.Content(meals, category)
@@ -57,6 +63,11 @@ class MealListViewModel
 
         init {
             selectCategory(selectedCategory.value)
+        }
+
+        /** Called once the snackbar carrying `Content.transientError` has been shown. */
+        fun dismissTransientError() {
+            refreshStatus.update { status -> if (status is RefreshStatus.Failed) RefreshStatus.Idle else status }
         }
 
         fun refresh() {

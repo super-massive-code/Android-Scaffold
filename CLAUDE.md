@@ -6,6 +6,9 @@ conventions in this and derived projects.
 
 ## Don'ts
 
+- **Never emit one-off UI events through a `Channel`/`SharedFlow`** — put a
+  nullable field on `Content` and have the screen acknowledge it. See
+  Architecture.
 - **Never put an exception's `message` in a UiState** — map it to a
   `UiError` so the user sees localised, actionable text. See Strings.
 - **Never `runCatching` around a suspend call** — it swallows
@@ -51,6 +54,23 @@ failure — comes back as a `Result.failure` to be mapped into the UI state.
 Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable
 parameters — see `MealDetailViewModel` for the pattern.
+
+**One-off UI feedback is a field on `Content`, not an event stream.** When a
+refresh fails while there's already something on screen, replacing the
+content with an error screen would be a downgrade — the cached list is still
+useful. So `Content` carries a `transientError: UiError?` alongside its data,
+the screen shows it in a `SnackbarHost` from a
+`LaunchedEffect(state.transientError)`, and calls the ViewModel's
+`dismissTransientError()` once `showSnackbar` returns. Failures with nothing
+to fall back on still become the `Error` case.
+
+Deliberately *not* a `Channel`/`SharedFlow` of one-off events: state
+survives rotation (a `Channel` emission delivered while the screen is being
+recreated is simply lost), it's assertable from `uiState.value` in a plain
+unit test with no collector, and there's exactly one place a screen reads
+its state from. The cost is that the ViewModel must be told when the message
+has been consumed, which is what `dismissTransientError()` is for — see
+`MealListViewModel`/`MealDetailViewModel`.
 
 **Forms are the exception to the sealed-interface rule.** A form has no
 resource-loading lifecycle, so `<Name>UiState` is a flat `data class` of

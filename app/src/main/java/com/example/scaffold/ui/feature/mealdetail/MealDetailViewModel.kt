@@ -36,7 +36,11 @@ class MealDetailViewModel
                 .onEach { meal ->
                     _uiState.update { current ->
                         when {
-                            meal?.instructions != null -> MealDetailUiState.Content(meal)
+                            meal?.instructions != null ->
+                                MealDetailUiState.Content(
+                                    meal = meal,
+                                    transientError = (current as? MealDetailUiState.Content)?.transientError,
+                                )
                             current is MealDetailUiState.Error -> current
                             else -> MealDetailUiState.Loading
                         }
@@ -49,10 +53,21 @@ class MealDetailViewModel
             viewModelScope.launch {
                 runSuspendCatching { mealRepository.refresh(mealId) }
                     .onFailure { throwable ->
-                        if (_uiState.value !is MealDetailUiState.Content) {
-                            _uiState.value = MealDetailUiState.Error(throwable.toUiError())
+                        val error = throwable.toUiError()
+                        _uiState.update { current ->
+                            when (current) {
+                                is MealDetailUiState.Content -> current.copy(transientError = error)
+                                else -> MealDetailUiState.Error(error)
+                            }
                         }
                     }
+            }
+        }
+
+        /** Called once the snackbar carrying `Content.transientError` has been shown. */
+        fun dismissTransientError() {
+            _uiState.update { current ->
+                if (current is MealDetailUiState.Content) current.copy(transientError = null) else current
             }
         }
     }

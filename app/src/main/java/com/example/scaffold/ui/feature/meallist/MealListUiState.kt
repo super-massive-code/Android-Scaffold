@@ -11,8 +11,13 @@ sealed interface MealListUiState {
         val error: UiError,
     ) : MealListUiState
 
+    /**
+     * [transientError] is a refresh failure that happened while there was already something
+     * to look at — shown as a snackbar over the list, not in place of it.
+     */
     data class Content(
         val meals: List<Meal>,
         val selectedCategory: MealCategory,
+        val transientError: UiError? = null,
     ) : MealListUiState
 }
