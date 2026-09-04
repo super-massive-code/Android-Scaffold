@@ -14,6 +14,7 @@ import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -104,6 +105,36 @@ class MealRepositoryEndToEndTest {
                 "https://www.themealdb.com/images/media/meals/adxcbq1619787919.jpg",
                 meals.first().thumbnailUrl,
             )
+        }
+
+    @Test
+    fun refreshByCategory_whenTheFetchFails_keepsThePreviouslyCachedMeals() =
+        runTest {
+            server.enqueue(
+                MockResponse
+                    .Builder()
+                    .addHeader("Content-Type", "application/json")
+                    .body(
+                        """
+                        {"meals":[
+                            {
+                                "strMeal": "Apam balik",
+                                "strMealThumb": "https://www.themealdb.com/images/media/meals/adxcbq1619787919.jpg",
+                                "idMeal": "53049"
+                            }
+                        ]}
+                        """.trimIndent(),
+                    ).build(),
+            )
+            repository.refreshByCategory(MealCategory.Chicken)
+
+            server.enqueue(MockResponse.Builder().code(500).build())
+            val failure = runCatching { repository.refreshByCategory(MealCategory.Beef) }.exceptionOrNull()
+
+            assertNotNull(failure)
+            val meals = repository.observeMeals().first()
+            assertEquals(1, meals.size)
+            assertEquals("Apam balik", meals.first().title)
         }
 
     @Test

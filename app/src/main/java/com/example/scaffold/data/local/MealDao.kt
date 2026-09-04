@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,4 +20,14 @@ interface MealDao {
 
     @Query("DELETE FROM meals")
     suspend fun deleteAll()
+
+    /**
+     * Swaps the whole cached list for [meals] in one transaction, so an observer never sees
+     * the gap between the old list being dropped and the new one landing.
+     */
+    @Transaction
+    suspend fun replaceAll(meals: List<MealEntity>) {
+        deleteAll()
+        upsertAll(meals)
+    }
 }

@@ -35,8 +35,9 @@ class MealRepositoryImpl
         }
 
         override suspend fun refreshByCategory(category: MealCategory) {
-            mealDao.deleteAll()
+            // Fetch before touching the cache: a failed request must leave the previously
+            // cached meals in place, or offline-first reads degrade to an empty screen.
             val meals = mealApi.getMealsByCategory(category.apiValue).meals.orEmpty()
-            mealDao.upsertAll(meals.map { it.toEntity() })
+            mealDao.replaceAll(meals.map { it.toEntity() })
         }
     }
