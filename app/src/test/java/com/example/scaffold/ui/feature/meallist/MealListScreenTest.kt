@@ -3,20 +3,22 @@ package com.example.scaffold.ui.feature.meallist
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Drives the stateless [MealListScreen] overload directly: no ViewModel, no fake repository, no
  * Hilt — a UiState in, callbacks out, which is all the Composable is. What the ViewModel does
  * with those callbacks is [MealListViewModelTest]'s job.
  */
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class MealListScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()

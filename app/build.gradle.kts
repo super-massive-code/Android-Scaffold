@@ -45,6 +45,9 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
     lint {
         abortOnError = true
         warningsAsErrors = true
@@ -120,10 +123,13 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.junit)
+    // Brings androidx.test:runner, which testInstrumentationRunner needs.
+    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.okhttp.mockwebserver3)
     androidTestImplementation(libs.androidx.room.testing)

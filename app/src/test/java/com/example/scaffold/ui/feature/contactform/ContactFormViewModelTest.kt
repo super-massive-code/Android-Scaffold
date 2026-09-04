@@ -1,30 +1,26 @@
 package com.example.scaffold.ui.feature.contactform
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.scaffold.MainDispatcherRule
 import com.example.scaffold.R
 import com.example.scaffold.data.repository.ContactRepository
 import com.example.scaffold.model.Contact
 import com.example.scaffold.ui.navigation.Destinations
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 private class FakeContactRepository(
     initialContacts: List<Contact> = emptyList(),
@@ -65,17 +61,10 @@ private class FakeContactRepository(
  * are plain functions that never touch a nav argument.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class ContactFormViewModelTest {
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     @Test
     fun submittingABlankFormReportsRequiredFieldErrorsAndDoesNotSave() =

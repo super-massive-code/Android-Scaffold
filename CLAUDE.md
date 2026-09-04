@@ -280,24 +280,34 @@ can't (a wrong `@Query` name, TheMealDB's real `{"meals":null}` response).
 It needs a connected device or emulator: `./gradlew
 connectedDebugAndroidTest`.
 
-A ViewModel that reads `SavedStateHandle.toRoute<Destinations.X>()` (any
-`<Name>DetailViewModel`) can't be unit-tested as a plain JVM test either —
-`toRoute()` internally calls `androidx.core.os.BundleKt.bundleOf`, and
-`android.os.Bundle` is stubbed to throw ("not mocked") outside a real
-Android runtime. `MealDetailViewModelTest` lives in `app/src/androidTest/`
-for this reason, alongside `MealRepositoryEndToEndTest`, and sets
-`Dispatchers.Main` to an `UnconfinedTestDispatcher` itself in `@Before`/
-`@After` (the same thing `MainDispatcherRule` does for JVM tests) since a
-real device's `Dispatchers.Main` is the actual main-looper dispatcher, not
-something `advanceUntilIdle()` can drive on its own.
+**Everything that needs an Android runtime but not a real device runs on the
+JVM under Robolectric.** That covers two things a plain JVM test can't do:
+a ViewModel reading `SavedStateHandle.toRoute<Destinations.X>()` (`toRoute()`
+goes through `androidx.core.os.BundleKt.bundleOf`, and `android.os.Bundle`
+is stubbed to throw "not mocked" without one), and Compose UI tests. So
+`MealDetailViewModelTest`, `ContactFormViewModelTest`, `MealListScreenTest`
+and `ContactListScreenTest` all live in `app/src/test/` with
+`@RunWith(RobolectricTestRunner::class)` — plus
+`@GraphicsMode(GraphicsMode.Mode.NATIVE)` on the two Compose ones — and use
+the same `MainDispatcherRule` as every other JVM test. The whole JVM suite,
+Robolectric included, runs in about 10 seconds, and CI covers it via
+`testDebugUnitTest` with no emulator.
 
-`ContactFormViewModelTest` lives in `androidTest` for the same reason as
-`MealDetailViewModelTest` — the form reads `contactId` through
-`toRoute()`. The validation rules, which have by far the most cases, stay in
-the fast JVM suite as `ContactFormValidationTest`, because they're plain
-functions that never touch a nav argument. That split is the general rule:
-push logic that needs no Android runtime into pure functions and unit test
-it there; let only the thin argument-reading shell be instrumented.
+Two pieces of setup make that work: `testOptions { unitTests
+.isIncludeAndroidResources = true }` in `app/build.gradle.kts`, and
+`app/src/test/resources/robolectric.properties` pinning `sdk=35` — Robolectric
+4.15.1 has no android-all jar for `compileSdk` 37, and without the pin every
+Robolectric test fails at startup. Raise that pin when Robolectric catches up.
+
+What stays in `androidTest`: the data-layer suites
+(`MealRepositoryEndToEndTest`, `ContactRepositoryEndToEndTest`,
+`MigrationTest`). Those exist to prove real Room/SQLite behaviour on a real
+Android runtime, which is exactly what Robolectric would be substituting.
+
+Independently of where a test runs: push logic that needs no Android runtime
+into pure functions and unit test it there. `ContactFormValidationTest` has
+by far the most cases of any test in the project and needs no runtime at all,
+because the rules are top-level functions over a `String`.
 
 **Compose UI tests can't assert past a list item being removed** on this
 toolchain: `waitForIdle()` after an item leaves a `LazyColumn` never returns

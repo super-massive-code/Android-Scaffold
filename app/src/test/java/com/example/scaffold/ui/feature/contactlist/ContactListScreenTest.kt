@@ -5,15 +5,17 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.model.Contact
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ContactListScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()

@@ -1,28 +1,24 @@
 package com.example.scaffold.ui.feature.mealdetail
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.scaffold.MainDispatcherRule
 import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
 import com.example.scaffold.ui.components.UiError
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 private class FakeMealRepository(
     private val mealAfterRefresh: Meal? = null,
@@ -55,17 +51,10 @@ private class FakeMealRepository(
  * test body instead of running eagerly.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class MealDetailViewModelTest {
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     @Test
     fun emitsContentOnceRefreshPopulatesTheInstructions() =
