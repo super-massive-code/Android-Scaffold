@@ -21,11 +21,23 @@ class ContactRepositoryImpl
                 entities.map { it.toDomain() }
             }
 
+        override fun observeContact(id: Long): Flow<Contact?> = contactDao.observeContact(id).map { it?.toDomain() }
+
         override suspend fun saveContact(contact: Contact) {
             withContext(ioDispatcher) {
                 contactDao.insert(contact.toEntity())
             }
         }
+
+        override suspend fun updateContact(contact: Contact) =
+            withContext(ioDispatcher) {
+                contactDao.update(contact.toEntity())
+            }
+
+        override suspend fun deleteContact(contact: Contact) =
+            withContext(ioDispatcher) {
+                contactDao.delete(contact.toEntity())
+            }
 
         override suspend fun seedIfEmpty() =
             withContext(ioDispatcher) {

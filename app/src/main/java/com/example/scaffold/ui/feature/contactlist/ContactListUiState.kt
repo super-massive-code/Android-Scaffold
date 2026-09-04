@@ -10,7 +10,13 @@ sealed interface ContactListUiState {
         val error: UiError,
     ) : ContactListUiState
 
+    /**
+     * [recentlyDeleted] is the contact a swipe just removed, waiting on an undo snackbar —
+     * the same state-field-not-event-channel pattern as `MealListUiState.Content`'s
+     * `transientError`.
+     */
     data class Content(
         val contacts: List<Contact>,
+        val recentlyDeleted: Contact? = null,
     ) : ContactListUiState
 }

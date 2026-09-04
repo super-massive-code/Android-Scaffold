@@ -76,7 +76,7 @@ fun ContactFormScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { ContactFormTopBar(onBack = onBack) },
+        topBar = { ContactFormTopBar(isEditing = uiState.isEditing, onBack = onBack) },
     ) { padding ->
         ContactFormFields(
             uiState = uiState,
@@ -94,9 +94,18 @@ fun ContactFormScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ContactFormTopBar(onBack: () -> Unit) {
+private fun ContactFormTopBar(
+    isEditing: Boolean,
+    onBack: () -> Unit,
+) {
     TopAppBar(
-        title = { Text(stringResource(R.string.contact_form_title)) },
+        title = {
+            Text(
+                stringResource(
+                    if (isEditing) R.string.contact_form_title_edit else R.string.contact_form_title,
+                ),
+            )
+        },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(

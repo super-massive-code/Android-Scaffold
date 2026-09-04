@@ -84,6 +84,24 @@ its state from. The cost is that the ViewModel must be told when the message
 has been consumed, which is what `dismissTransientError()` is for — see
 `MealListViewModel`/`MealDetailViewModel`.
 
+A destructive action follows the same transient-feedback shape, one step
+further: `ContactListUiState.Content` carries `recentlyDeleted: Contact?`,
+the screen shows a snackbar with an Undo action, and the ViewModel's
+`undoDelete()` re-inserts the contact under its original id (`dismissUndo()`
+for the dismissed case). The delete happens immediately — an undo that
+re-inserts is simpler and more honest than a pending-delete timer, and it
+behaves correctly if the process dies mid-snackbar.
+
+Two things about `SwipeToDismissBox` in a keyed `LazyColumn`, both learned
+the hard way in `ContactListScreen`: `rememberSwipeToDismissBoxState()` is
+saved *per item key*, so a row that comes back (undo re-inserting it under
+the same id) is rebuilt with its state still at `EndToStart` — snap it back
+to `Settled` on composition, or the row renders permanently swiped away. And
+the delete must fire on a *transition* into that anchor
+(`snapshotFlow { state.currentValue }.drop(1).filter { … }`), never on
+`currentValue` read directly, or the restored row deletes itself again the
+instant undo puts it back.
+
 **Forms are the exception to the sealed-interface rule.** A form has no
 resource-loading lifecycle, so `<Name>UiState` is a flat `data class` of
 field values, per-field `@StringRes Int?` errors, and an
@@ -137,8 +155,13 @@ repository is free to add such a per-item refresh overload alongside the
 list-level one where the backing API's list/detail payloads genuinely
 differ in shape, rather than forcing a single `refresh()` to over-fetch.
 `ContactRepository` is the local-only variant of the same pattern: no remote
-source, just a `suspend fun saveContact()` write path into Room — the
-counterpart to `MealRepository`'s read path. It also owns `seedIfEmpty()`,
+source, just `saveContact`/`updateContact`/`deleteContact` write paths into
+Room alongside `observeContacts()`/`observeContact(id)` — the counterpart to
+`MealRepository`'s read path. Note `Contact.toEntity()` carries the `id`
+through: `@Update` and `@Delete` match on the primary key, and dropping it
+makes both silently no-op. That class of mapper bug is invisible to a fake
+DAO, which is why `ContactRepositoryEndToEndTest` drives the real Room
+database the same way `MealRepositoryEndToEndTest` does. It also owns `seedIfEmpty()`,
 called once from `ScaffoldApp.onCreate()`, so a fresh install shows the
 Contacts tab with something in it rather than the empty state — any
 "ensure the store has starting data" logic belongs behind the repository
@@ -221,6 +244,14 @@ hidden on non-top-level destinations (`MealDetail`, `ContactForm`) via
 `currentDestination.hierarchy.any { it.hasRoute(topLevel.route::class) }` —
 detail/form screens are full-screen, not tab content.
 
+An optional screen argument is a **sentinel, not a nullable primitive**:
+`Destinations.ContactForm(val contactId: Long = NEW_CONTACT)` where
+`NEW_CONTACT` is `0L`. Type-safe routes have no `NavType` for `Long?`, and 0
+is unambiguous here because Room's `autoGenerate` ids start at 1 — it's
+already what `Contact.id` holds before a row is written. The form reads it
+with `SavedStateHandle.toRoute()` like any other screen argument and decides
+between insert and update from that one value.
+
 Adding a third tab: add its route to `Destinations`, add an entry to
 `TopLevelDestination`, add its `composable<...>` to the `NavHost` — the bottom
 bar updates automatically since it iterates `TopLevelDestination.entries`.
@@ -259,6 +290,23 @@ for this reason, alongside `MealRepositoryEndToEndTest`, and sets
 `@After` (the same thing `MainDispatcherRule` does for JVM tests) since a
 real device's `Dispatchers.Main` is the actual main-looper dispatcher, not
 something `advanceUntilIdle()` can drive on its own.
+
+`ContactFormViewModelTest` lives in `androidTest` for the same reason as
+`MealDetailViewModelTest` — the form reads `contactId` through
+`toRoute()`. The validation rules, which have by far the most cases, stay in
+the fast JVM suite as `ContactFormValidationTest`, because they're plain
+functions that never touch a nav argument. That split is the general rule:
+push logic that needs no Android runtime into pure functions and unit test
+it there; let only the thin argument-reading shell be instrumented.
+
+**Compose UI tests can't assert past a list item being removed** on this
+toolchain: `waitForIdle()` after an item leaves a `LazyColumn` never returns
+("ComposeIdlingResource is busy due to pending measure/layout"), and it
+reproduces with a bare `LazyColumn` of `Text`s, so it isn't something this
+app's screens cause. The running app is unaffected (idle at 0% CPU after a
+delete). Test callbacks and states that don't remove a row, and cover the
+removal itself in the ViewModel and repository tests, which have no such
+limitation.
 
 Compose UI tests (`MealListScreenTest`) drive the stateless `<Name>Screen`
 overload directly with a literal UiState and record what its callbacks were

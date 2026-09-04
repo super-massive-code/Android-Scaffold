@@ -7,6 +7,7 @@
 
     <string name="action_back">Back</string>
     <string name="action_retry">Retry</string>
+    <string name="action_undo">Undo</string>
 
     <string name="nav_contacts">Contacts</string>
     <string name="nav_meals">Meals</string>
@@ -16,9 +17,12 @@
     <string name="meal_detail_title">Meal</string>
 
     <string name="contact_list_action_add">Add contact</string>
+    <string name="contact_list_action_delete">Delete contact</string>
+    <string name="contact_list_deleted">Contact deleted</string>
     <string name="contact_list_empty_message">No contacts yet. Tap + to add one.</string>
 
     <string name="contact_form_title">New contact</string>
+    <string name="contact_form_title_edit">Edit contact</string>
     <string name="contact_form_label_first_name">First name</string>
     <string name="contact_form_label_last_name">Last name</string>
     <string name="contact_form_label_address_line1">Address line 1</string>

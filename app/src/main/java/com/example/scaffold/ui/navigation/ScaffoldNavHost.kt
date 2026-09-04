@@ -53,7 +53,10 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
             ) {
                 composable<Destinations.ContactList> {
                     ContactListScreen(
-                        onAddContactClick = { navController.navigate(Destinations.ContactForm) },
+                        onAddContactClick = { navController.navigate(Destinations.ContactForm()) },
+                        onContactClick = { contactId ->
+                            navController.navigate(Destinations.ContactForm(contactId))
+                        },
                         modifier = Modifier.padding(bottom = BottomNavigationBarHeight),
                     )
                 }

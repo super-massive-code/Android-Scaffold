@@ -1,49 +1,87 @@
 package com.example.scaffold.ui.feature.contactform
 
-import com.example.scaffold.MainDispatcherRule
+import androidx.lifecycle.SavedStateHandle
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.scaffold.R
 import com.example.scaffold.data.repository.ContactRepository
 import com.example.scaffold.model.Contact
+import com.example.scaffold.ui.navigation.Destinations
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
 private class FakeContactRepository(
+    initialContacts: List<Contact> = emptyList(),
     private val saveError: Throwable? = null,
 ) : ContactRepository {
     val savedContacts = mutableListOf<Contact>()
-    private val contactsFlow = MutableStateFlow<List<Contact>>(emptyList())
+    val updatedContacts = mutableListOf<Contact>()
+    private val contactsFlow = MutableStateFlow(initialContacts)
 
     override fun observeContacts(): Flow<List<Contact>> = contactsFlow.asStateFlow()
+
+    override fun observeContact(id: Long): Flow<Contact?> =
+        contactsFlow.map { contacts -> contacts.find { it.id == id } }
 
     override suspend fun saveContact(contact: Contact) {
         saveError?.let { throw it }
         savedContacts += contact
-        contactsFlow.value = savedContacts.toList()
+        contactsFlow.value = contactsFlow.value + contact
+    }
+
+    override suspend fun updateContact(contact: Contact) {
+        saveError?.let { throw it }
+        updatedContacts += contact
+    }
+
+    override suspend fun deleteContact(contact: Contact) {
+        contactsFlow.value = contactsFlow.value - contact
     }
 
     override suspend fun seedIfEmpty() = Unit
 }
 
+/**
+ * Instrumented for the same reason as `MealDetailViewModelTest`: [ContactFormViewModel] now
+ * reads its `contactId` with `SavedStateHandle.toRoute<Destinations.ContactForm>()`, which goes
+ * through `android.os.Bundle` and can't run on the JVM. The form's validation rules — the part
+ * with the most cases — stay in the fast JVM suite as `ContactFormValidationTest`, because they
+ * are plain functions that never touch a nav argument.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class ContactFormViewModelTest {
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
-    fun `submitting a blank form reports required-field errors and does not save`() =
+    fun submittingABlankFormReportsRequiredFieldErrorsAndDoesNotSave() =
         runTest {
             val repository = FakeContactRepository()
-            val viewModel = ContactFormViewModel(repository)
+            val viewModel = ContactFormViewModel(newContactHandle(), repository)
 
             viewModel.submit()
             advanceUntilIdle()
@@ -56,10 +94,10 @@ class ContactFormViewModelTest {
         }
 
     @Test
-    fun `an invalid postcode is rejected without touching the repository`() =
+    fun anInvalidPostcodeIsRejectedWithoutTouchingTheRepository() =
         runTest {
             val repository = FakeContactRepository()
-            val viewModel = ContactFormViewModel(repository)
+            val viewModel = ContactFormViewModel(newContactHandle(), repository)
 
             viewModel.onFirstNameChange("Ada")
             viewModel.onLastNameChange("Lovelace")
@@ -74,10 +112,10 @@ class ContactFormViewModelTest {
         }
 
     @Test
-    fun `a valid submission saves the contact and marks the form submitted`() =
+    fun aValidSubmissionSavesTheContactAndMarksTheFormSubmitted() =
         runTest {
             val repository = FakeContactRepository()
-            val viewModel = ContactFormViewModel(repository)
+            val viewModel = ContactFormViewModel(newContactHandle(), repository)
 
             viewModel.onFirstNameChange("Ada")
             viewModel.onLastNameChange("Lovelace")
@@ -96,10 +134,10 @@ class ContactFormViewModelTest {
         }
 
     @Test
-    fun `a failed save reports submitError and leaves the form on screen`() =
+    fun aFailedSaveReportsSubmitErrorAndLeavesTheFormOnScreen() =
         runTest {
             val repository = FakeContactRepository(saveError = IllegalStateException("disk full"))
-            val viewModel = ContactFormViewModel(repository)
+            val viewModel = ContactFormViewModel(newContactHandle(), repository)
             viewModel.fillInAValidContact()
 
             viewModel.submit()
@@ -112,10 +150,10 @@ class ContactFormViewModelTest {
         }
 
     @Test
-    fun `re-submitting clears the previous save failure`() =
+    fun resubmittingClearsThePreviousSaveFailure() =
         runTest {
             val repository = FakeContactRepository(saveError = IllegalStateException("disk full"))
-            val viewModel = ContactFormViewModel(repository)
+            val viewModel = ContactFormViewModel(newContactHandle(), repository)
             viewModel.fillInAValidContact()
             viewModel.submit()
             advanceUntilIdle()
@@ -130,6 +168,36 @@ class ContactFormViewModelTest {
             assertNull(state.submitError)
             assertEquals(R.string.contact_form_error_required, state.firstNameError)
         }
+
+    @Test
+    fun editModePreloadsTheContactsFieldsAndUpdatesInsteadOfInserting() =
+        runTest {
+            val existing =
+                Contact(
+                    id = 7,
+                    firstName = "Grace",
+                    lastName = "Hopper",
+                    addressLine1 = "45 Harbour Road",
+                    addressLine2 = null,
+                    city = "Portsmouth",
+                    postcode = "PO1 3AX",
+                )
+            val repository = FakeContactRepository(initialContacts = listOf(existing))
+            val viewModel = ContactFormViewModel(SavedStateHandle(mapOf("contactId" to 7L)), repository)
+            advanceUntilIdle()
+
+            val preloaded = viewModel.uiState.value
+            assertTrue(preloaded.isEditing)
+            assertEquals("Grace", preloaded.firstName)
+            assertEquals("PO1 3AX", preloaded.postcode)
+
+            viewModel.onCityChange("Southsea")
+            viewModel.submit()
+            advanceUntilIdle()
+
+            assertTrue(repository.savedContacts.isEmpty())
+            assertEquals(existing.copy(city = "Southsea"), repository.updatedContacts.single())
+        }
 }
 
 private fun ContactFormViewModel.fillInAValidContact() {
@@ -139,3 +207,5 @@ private fun ContactFormViewModel.fillInAValidContact() {
     onCityChange("London")
     onPostcodeChange("SW1A 1AA")
 }
+
+private fun newContactHandle() = SavedStateHandle(mapOf("contactId" to Destinations.NEW_CONTACT))

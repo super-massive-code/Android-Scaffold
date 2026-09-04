@@ -31,31 +31,37 @@ private val PreviewContacts =
 @PreviewLightDark
 @Composable
 private fun ContactListScreenContentPreview() {
-    ScaffoldTheme {
-        ContactListScreen(uiState = ContactListUiState.Content(PreviewContacts), onAddContactClick = {})
-    }
+    PreviewContactList(ContactListUiState.Content(PreviewContacts))
 }
 
 @PreviewLightDark
 @Composable
 private fun ContactListScreenEmptyPreview() {
-    ScaffoldTheme {
-        ContactListScreen(uiState = ContactListUiState.Content(emptyList()), onAddContactClick = {})
-    }
+    PreviewContactList(ContactListUiState.Content(emptyList()))
 }
 
 @PreviewLightDark
 @Composable
 private fun ContactListScreenLoadingPreview() {
-    ScaffoldTheme {
-        ContactListScreen(uiState = ContactListUiState.Loading, onAddContactClick = {})
-    }
+    PreviewContactList(ContactListUiState.Loading)
 }
 
 @PreviewLightDark
 @Composable
 private fun ContactListScreenErrorPreview() {
+    PreviewContactList(ContactListUiState.Error(UiError.Unknown))
+}
+
+@Composable
+private fun PreviewContactList(uiState: ContactListUiState) {
     ScaffoldTheme {
-        ContactListScreen(uiState = ContactListUiState.Error(UiError.Unknown), onAddContactClick = {})
+        ContactListScreen(
+            uiState = uiState,
+            onAddContactClick = {},
+            onContactClick = {},
+            onDeleteContact = {},
+            onUndoDelete = {},
+            onUndoDismissed = {},
+        )
     }
 }

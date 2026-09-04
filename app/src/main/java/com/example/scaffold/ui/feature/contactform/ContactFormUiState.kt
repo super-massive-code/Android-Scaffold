@@ -20,6 +20,8 @@ data class ContactFormUiState(
     @param:StringRes val cityError: Int? = null,
     @param:StringRes val postcodeError: Int? = null,
     @param:StringRes val submitError: Int? = null,
+    /** Drives the title, and whether `submit()` inserts or updates. */
+    val isEditing: Boolean = false,
     val isSubmitting: Boolean = false,
     val isSubmitted: Boolean = false,
 ) {
