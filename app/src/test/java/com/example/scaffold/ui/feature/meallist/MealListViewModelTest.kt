@@ -5,6 +5,7 @@ import com.example.scaffold.data.repository.MealRepository
 import com.example.scaffold.model.Meal
 import com.example.scaffold.model.MealCategory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +20,8 @@ import org.junit.Test
 private class FakeMealRepository(
     private val mealsAfterRefresh: List<Meal> = emptyList(),
     private val refreshError: Throwable? = null,
+    private val mealsByCategory: Map<MealCategory, List<Meal>> = emptyMap(),
+    private val refreshDelayByCategory: Map<MealCategory, Long> = emptyMap(),
 ) : MealRepository {
     private val mealsFlow = MutableStateFlow<List<Meal>>(emptyList())
 
@@ -30,7 +33,8 @@ private class FakeMealRepository(
 
     override suspend fun refreshByCategory(category: MealCategory) {
         refreshError?.let { throw it }
-        mealsFlow.value = mealsAfterRefresh
+        delay(refreshDelayByCategory[category] ?: 0L)
+        mealsFlow.value = mealsByCategory[category] ?: mealsAfterRefresh
     }
 }
 
@@ -74,5 +78,31 @@ class MealListViewModelTest {
             val state = viewModel.uiState.value
             assertTrue(state is MealListUiState.Error)
             assertEquals("boom", (state as MealListUiState.Error).message)
+        }
+
+    @Test
+    fun `re-selecting a category cancels the refresh already in flight`() =
+        runTest {
+            val chicken = Meal(id = "1", title = "Chicken pie", thumbnailUrl = "https://example.com/1.jpg")
+            val beef = Meal(id = "2", title = "Beef pie", thumbnailUrl = "https://example.com/2.jpg")
+            // Chicken (selected on construction) resolves last, so if its refresh survived the
+            // switch to Beef it would be the list the user ends up looking at.
+            val viewModel =
+                MealListViewModel(
+                    FakeMealRepository(
+                        mealsByCategory =
+                            mapOf(MealCategory.Chicken to listOf(chicken), MealCategory.Beef to listOf(beef)),
+                        refreshDelayByCategory =
+                            mapOf(MealCategory.Chicken to 200L, MealCategory.Beef to 50L),
+                    ),
+                )
+
+            viewModel.selectCategory(MealCategory.Beef)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is MealListUiState.Content)
+            assertEquals(listOf(beef), (state as MealListUiState.Content).meals)
+            assertEquals(MealCategory.Beef, state.selectedCategory)
         }
 }
