@@ -6,9 +6,10 @@ A personal base Android project used as a reference template — clone or copy
 this structure when starting a new app, and treat it as the source of truth
 for conventions in derived projects.
 
-It's a small two-tab app (Contacts, Meals) that exercises the full stack end
-to end: a local-only CRUD feature and a network-backed, offline-first
-feature, both wired through the same architecture.
+It's a small three-tab app (Contacts, Meals, Settings) that exercises the full
+stack end to end: a local-only CRUD feature, a network-backed offline-first
+feature, and a DataStore-backed preference, all wired through the same
+architecture.
 
 ## Stack
 
@@ -25,6 +26,30 @@ Single `:app` module — package-by-layer at the top level (`data`, `di`,
 [`CLAUDE.md`](CLAUDE.md) for the full set of architectural conventions this
 project follows (MVVM + unidirectional data flow, the offline-first
 repository pattern, string-resource discipline, testing strategy, etc.).
+
+## Starting a new project from this one
+
+Copy or clone this repo, then run the derivation script from inside the copy
+with a clean working tree:
+
+```sh
+scripts/new-project.sh com.acme.notes Notes                  # keep the sample features
+scripts/new-project.sh com.acme.notes Notes --strip-samples  # or start from a bare shell
+```
+
+It moves the sources to the new package, rewrites `namespace`,
+`applicationId`, `rootProject.name`, `app_name`, the `Scaffold*` class names,
+the theme names, the database name and the deep-link scheme, and finishes by
+running the full check suite so you know the result builds.
+
+`--strip-samples` additionally deletes the Meals and Contacts features, their
+data layer, DI bindings, strings and tests, leaving the Settings tab as the
+only screen — DI, navigation, theming, DataStore and the Retrofit/OkHttp setup
+all stay wired, so it's a shell you can build on rather than an empty project.
+
+Everything happens in place, so `git diff` shows exactly what changed and
+`git checkout .` undoes it. `CLAUDE.md` still describes the sample features
+afterwards — trim it to match whatever you keep.
 
 ## Building
 
