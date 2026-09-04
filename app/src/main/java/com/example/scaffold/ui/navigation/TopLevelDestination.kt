@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,7 @@ enum class TopLevelDestination(
 ) {
     Contacts(Destinations.ContactList, R.string.nav_contacts, Icons.Filled.Person),
     Meals(Destinations.MealList, R.string.nav_meals, Icons.AutoMirrored.Filled.List),
+    Settings(Destinations.Settings, R.string.nav_settings, Icons.Filled.Settings),
 }
 
 /**

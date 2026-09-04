@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -28,6 +29,7 @@ import com.example.scaffold.ui.feature.contactform.ContactFormScreen
 import com.example.scaffold.ui.feature.contactlist.ContactListScreen
 import com.example.scaffold.ui.feature.mealdetail.MealDetailScreen
 import com.example.scaffold.ui.feature.meallist.MealListScreen
+import com.example.scaffold.ui.feature.settings.SettingsScreen
 
 /**
  * No outer [androidx.compose.material3.Scaffold] here: the bottom nav bar is overlaid on top of
@@ -69,6 +71,9 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
                         animatedVisibilityScope = this,
                     )
                 }
+                composable<Destinations.Settings> {
+                    SettingsScreen(modifier = Modifier.padding(bottom = BottomNavigationBarHeight))
+                }
                 composable<Destinations.MealDetail>(
                     // scaffold://meal/52772 — the {mealId} segment is filled in from the route's
                     // own field, so the deep link stays in step with the route definition.
@@ -89,31 +94,46 @@ fun ScaffoldNavHost(modifier: Modifier = Modifier) {
             }
         }
 
-        AnimatedVisibility(
+        ScaffoldBottomBar(
             visible = isTopLevelDestination,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            NavigationBar {
-                TopLevelDestination.entries.forEach { topLevel ->
-                    val selected =
-                        currentDestination?.hierarchy?.any { it.hasRoute(topLevel.route::class) } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(topLevel.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(topLevel.icon, contentDescription = stringResource(topLevel.label)) },
-                        label = { Text(stringResource(topLevel.label)) },
-                    )
+            currentDestination = currentDestination,
+            onTabClick = { route ->
+                navController.navigate(route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+@Composable
+private fun ScaffoldBottomBar(
+    visible: Boolean,
+    currentDestination: NavDestination?,
+    onTabClick: (Destinations) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        NavigationBar {
+            TopLevelDestination.entries.forEach { topLevel ->
+                val selected =
+                    currentDestination?.hierarchy?.any { it.hasRoute(topLevel.route::class) } == true
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = { onTabClick(topLevel.route) },
+                    icon = { Icon(topLevel.icon, contentDescription = stringResource(topLevel.label)) },
+                    label = { Text(stringResource(topLevel.label)) },
+                )
             }
         }
     }

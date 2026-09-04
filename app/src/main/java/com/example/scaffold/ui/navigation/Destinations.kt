@@ -10,6 +10,9 @@ sealed interface Destinations {
     data object MealList : Destinations
 
     @Serializable
+    data object Settings : Destinations
+
+    @Serializable
     data class MealDetail(
         val mealId: String,
     ) : Destinations

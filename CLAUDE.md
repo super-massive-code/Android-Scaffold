@@ -89,6 +89,12 @@ is reachable from a `@Preview` and from a Compose UI test with a literal
 UiState — no Hilt, no fake repository, no coroutines. Anything the body
 needs from the ViewModel arrives as a parameter: state in, callbacks out.
 
+`MainActivity` is the one screen-less consumer of a ViewModel: `MainViewModel`
+exposes the stored `ThemeMode` so the Activity can hand `darkTheme` to
+`ScaffoldTheme` without ever touching a repository itself. The app shell is
+not a feature, but the rule that only ViewModels talk to repositories still
+holds.
+
 Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable
 parameters — see `MealDetailViewModel` for the pattern.
@@ -200,6 +206,19 @@ Contacts tab with something in it rather than the empty state — any
 "ensure the store has starting data" logic belongs behind the repository
 interface like this, not written inline in `ScaffoldApp`/`MainActivity`.
 
+**Room for records, DataStore for preferences.** A handful of key-value
+settings doesn't want a table: `data/local/UserPreferencesDataSource.kt` wraps
+a `DataStore<Preferences>` (provided by `di/DataStoreModule`) and is the only
+place that knows the storage keys and how a value is encoded — the DataStore
+counterpart to a `@Dao`. `UserPreferencesRepository` sits on top of it exactly
+like `MealRepository` sits on `MealDao`, exposing `observeThemeMode(): Flow<ThemeMode>`
+and `setThemeMode()` in domain terms.
+
+Decoding is deliberately forgiving: a missing key, or a value written by a
+version that had a mode this one doesn't, reads back as the default rather
+than throwing. Preferences have no migration mechanism, so an unreadable value
+must not be able to break app startup.
+
 **Per-environment configuration lives in `buildConfigField`, never a Kotlin
 constant.** The API base URL is declared in `defaultConfig` and read as
 `BuildConfig.MEAL_API_BASE_URL` in `NetworkModule`, so a build type or
@@ -261,7 +280,8 @@ starting data" is a repository concern; *when* to run it is the app's.
 screens with the type-safe `composable<Destinations.X>` overload — no string
 routes, no manual argument bundling.
 
-The app is a 2-tab bottom-nav app (Contacts, Meals). `TopLevelDestination.kt`
+The app is a 3-tab bottom-nav app (Contacts, Meals, Settings).
+`TopLevelDestination.kt`
 enumerates the tabs (route + label + icon); `ScaffoldNavHost` holds a single
 `NavController` and a `NavigationBar` shared by both tabs — there's no
 per-tab back stack or nested `NavHost`. There's deliberately no outer
@@ -295,9 +315,11 @@ already what `Contact.id` holds before a row is written. The form reads it
 with `SavedStateHandle.toRoute()` like any other screen argument and decides
 between insert and update from that one value.
 
-Adding a third tab: add its route to `Destinations`, add an entry to
-`TopLevelDestination`, add its `composable<...>` to the `NavHost` — the bottom
-bar updates automatically since it iterates `TopLevelDestination.entries`.
+Adding a tab is three edits: a route in `Destinations`, an entry in
+`TopLevelDestination`, a `composable<...>` in the `NavHost`. The bottom bar
+updates itself, since it iterates `TopLevelDestination.entries`. The Settings
+tab is the worked example — its commit touches nothing else in the navigation
+layer.
 
 ## Testing
 
