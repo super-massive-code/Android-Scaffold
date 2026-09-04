@@ -6,14 +6,40 @@ conventions in this and derived projects.
 
 ## Don'ts
 
-- **Never emit one-off UI events through a `Channel`/`SharedFlow`** — put a
-  nullable field on `Content` and have the screen acknowledge it. See
-  Architecture.
-- **Never put an exception's `message` in a UiState** — map it to a
-  `UiError` so the user sees localised, actionable text. See Strings.
-- **Never `runCatching` around a suspend call** — it swallows
-  `CancellationException` and breaks structured concurrency. Use
-  `runSuspendCatching` from `util/` instead.
+Each of these has bitten this project or a derived one. The rest of the
+document explains the alternatives; this list is what not to do.
+
+- **No `Context`/`Application` in a ViewModel.** It exists to resolve
+  strings, and that's the Composable's job — carry a `@StringRes Int`
+  instead. See Strings.
+- **No user-facing text in Kotlin source.** Every string a user can read
+  lives in `res/values/strings.xml`, including content descriptions and tab
+  labels. Text assembled from parts uses a format resource, never a Kotlin
+  template. See Strings.
+- **No exception `message` in a UiState.** Map it to a `UiError` so the user
+  sees localised, actionable text rather than "Unable to resolve host". See
+  Strings.
+- **No `runCatching` around a suspend call.** It swallows
+  `CancellationException` and breaks structured concurrency — use
+  `runSuspendCatching` from `util/`. See Architecture.
+- **No `Channel`/`SharedFlow` of one-off UI events.** A nullable field on
+  `Content` that the screen acknowledges survives rotation and is assertable
+  from `uiState.value`. See Architecture.
+- **No clearing the cache before a network fetch.** Fetch first, then
+  replace in one transaction, or a failed request leaves the user with an
+  empty screen — the opposite of what an offline-first repository is for.
+  See Data layer.
+- **No destructive Room migrations.** Every schema change gets an explicit
+  `Migration`, a committed schema JSON, and a `MigrationTest` case.
+  `fallbackToDestructiveMigration()` deletes real users' data. See Data
+  layer.
+- **No `Dispatchers.IO` outside `CoroutinesModule`.** Repositories take an
+  injected `@IoDispatcher` so tests can substitute one. See Dependency
+  injection.
+- **No mocking libraries.** Hand-write a fake implementing the interface;
+  where a fake would hide a real integration failure (a mapper dropping a
+  primary key, a wrong `@Query`), write an end-to-end test against real Room
+  instead. See Testing.
 
 ## Stack
 
