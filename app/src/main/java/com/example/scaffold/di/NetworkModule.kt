@@ -13,8 +13,10 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
-private const val BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
+private val NETWORK_TIMEOUT = 30.seconds
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -32,6 +34,8 @@ object NetworkModule {
     fun provideOkHttpClient(): OkHttpClient =
         OkHttpClient
             .Builder()
+            .connectTimeout(NETWORK_TIMEOUT.toJavaDuration())
+            .readTimeout(NETWORK_TIMEOUT.toJavaDuration())
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
@@ -46,7 +50,7 @@ object NetworkModule {
     ): Retrofit =
         Retrofit
             .Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.MEAL_API_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

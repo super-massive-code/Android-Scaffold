@@ -144,6 +144,13 @@ Contacts tab with something in it rather than the empty state — any
 "ensure the store has starting data" logic belongs behind the repository
 interface like this, not written inline in `ScaffoldApp`/`MainActivity`.
 
+**Per-environment configuration lives in `buildConfigField`, never a Kotlin
+constant.** The API base URL is declared in `defaultConfig` and read as
+`BuildConfig.MEAL_API_BASE_URL` in `NetworkModule`, so a build type or
+flavour can point the app at staging by overriding one line of Gradle
+instead of editing source. Values that are the same everywhere (the OkHttp
+`connectTimeout`/`readTimeout`) stay as named Kotlin constants.
+
 **Schema changes get an explicit `Migration`, never destructive fallback.**
 Bump `@Database(version = ...)` in `AppDatabase` and add a `Migration`
 object in `data/local/Migrations.kt` (registered via `.addMigrations(...)`
