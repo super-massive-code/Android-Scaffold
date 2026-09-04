@@ -14,6 +14,6 @@
 # Room, Retrofit, OkHttp, Hilt, and kotlinx.serialization each ship their own
 # consumer keep rules inside their AARs/JARs, which R8 merges automatically.
 # No extra rules are needed here for the direct, non-reflective usage in this
-# scaffold (e.g. PostDto.serializer() resolved at compile time). Add rules here
-# only if a library's docs call for it or a release build strips something
-# a debug build didn't.
+# scaffold (e.g. MealSummaryDto.serializer() resolved at compile time). Add
+# rules here only if a library's docs call for it or a release build strips
+# something a debug build didn't.
