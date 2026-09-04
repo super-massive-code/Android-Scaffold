@@ -53,6 +53,18 @@ class MealListViewModelTest {
         }
 
     @Test
+    fun `emits empty content when a refresh succeeds with no meals`() =
+        runTest {
+            val viewModel = MealListViewModel(FakeMealRepository(mealsAfterRefresh = emptyList()))
+
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertTrue(state is MealListUiState.Content)
+            assertEquals(emptyList<Meal>(), (state as MealListUiState.Content).meals)
+        }
+
+    @Test
     fun `emits error when refresh fails and the cache is empty`() =
         runTest {
             val viewModel = MealListViewModel(FakeMealRepository(refreshError = IllegalStateException("boom")))
