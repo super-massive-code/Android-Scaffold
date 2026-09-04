@@ -18,7 +18,7 @@ feature, both wired through the same architecture.
 - Jetpack Compose + Material 3
 - Hilt (DI), Room (local cache), Retrofit + OkHttp + kotlinx.serialization
   (networking), Navigation Compose with type-safe routes
-- detekt + ktlint for static analysis/formatting
+- detekt + ktlint + Android Lint for static analysis/formatting
 
 Single `:app` module — package-by-layer at the top level (`data`, `di`,
 `model`, `ui`), package-by-feature inside `ui.feature`. See
@@ -47,7 +47,8 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```sh
 ./gradlew ktlintCheck
 ./gradlew detekt
+./gradlew lintDebug   # Android Lint, warningsAsErrors
 ```
 
-CI (`.github/workflows/ci.yml`) runs `ktlintCheck detekt testDebugUnitTest
-assembleDebug` on every push/PR to `main`.
+CI (`.github/workflows/ci.yml`) runs `ktlintCheck detekt lintDebug
+testDebugUnitTest assembleDebug` on every push/PR to `main`.

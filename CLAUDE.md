@@ -23,7 +23,7 @@ conventions in this and derived projects.
 - Jetpack Compose + Material 3
 - Hilt (DI), Room (local cache), Retrofit + OkHttp + kotlinx.serialization
   (networking), Navigation Compose with type-safe routes
-- detekt + ktlint for static analysis/formatting
+- detekt + ktlint + Android Lint for static analysis/formatting
 
 Single `:app` module — no multi-module split. Package-by-layer at the top
 level (`data`, `di`, `model`, `ui`, `util`), package-by-feature inside
@@ -290,6 +290,12 @@ messages thrown internally) are exempt.
   (Compose dimension literals like `16.dp` aren't a smell).
 - `./gradlew ktlintCheck` / `ktlintFormat` — Android Kotlin style guide
   enabled (`android.set(true)`).
+- `./gradlew lintDebug` — Android Lint with `abortOnError` and
+  `warningsAsErrors`, and **no baseline**: a lint warning is fixed, not
+  parked. The three dependency-freshness checks
+  (`AndroidGradlePluginVersion`, `GradleDependency`, `NewerVersionAvailable`)
+  are disabled in `app/build.gradle.kts` — they turn any upstream release
+  into a red build, and keeping dependencies current is Dependabot's job.
 
 **`.editorconfig` (project root) is load-bearing, not cosmetic.** Without
 `max_line_length = 120`, ktlint has no line-length limit of its own and will
@@ -302,8 +308,8 @@ covers detekt's own check) and will flag every screen composable in the app.
 Both were only discovered by actually running `ktlintCheck`/`detekt` —
 they're configured via Gradle at setup time, and nothing runs them locally
 on its own, so don't assume a clean tree just because the project builds.
-`.github/workflows/ci.yml` runs `ktlintCheck detekt testDebugUnitTest
-assembleDebug` on every push/PR to `main`, but that's a remote safety net,
+`.github/workflows/ci.yml` runs `ktlintCheck detekt lintDebug
+testDebugUnitTest assembleDebug` on every push/PR to `main`, but that's a remote safety net,
 not a substitute for running them yourself before committing. CI
 deliberately excludes `connectedDebugAndroidTest` — the `androidTest` suite
 needs a booted emulator/device (see `./gradlew connectedDebugAndroidTest`

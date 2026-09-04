@@ -43,6 +43,14 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+        checkDependencies = false
+        // Dependency freshness is Dependabot's job. These checks hit the network and would
+        // fail the build on the day any upstream release happens, which isn't a code defect.
+        disable += setOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
+    }
 }
 
 // Schemas are committed so MigrationTest can open an older version and migrate it forward.
