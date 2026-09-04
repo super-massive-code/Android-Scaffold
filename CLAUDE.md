@@ -172,11 +172,31 @@ survived.
 ## Dependency injection
 
 Hilt modules live in `di/`, one per concern (`NetworkModule`,
-`DatabaseModule`, `RepositoryModule`). Bind interfaces to implementations
+`DatabaseModule`, `RepositoryModule`, `CoroutinesModule`). Bind interfaces to implementations
 with `@Binds` in an `abstract class` module; provide third-party types
 (`Retrofit`, `AppDatabase`, `OkHttpClient`) with `@Provides` in an `object`
 module. Everything is `@Singleton` — this app has no scoped/per-screen
 dependencies yet.
+
+**Dispatchers are injected, never referenced directly.**
+`CoroutinesModule` provides `@IoDispatcher CoroutineDispatcher`
+(`Dispatchers.IO`) and `@ApplicationScope CoroutineScope` (a `SupervisorJob`
+on that dispatcher), both `@Qualifier` annotations declared in the same
+file. Every repository takes `@param:IoDispatcher private val ioDispatcher`
+and wraps its suspend bodies in `withContext(ioDispatcher)` — so callers
+(ViewModels, `MealRepositoryEndToEndTest`) never have to know or care which
+thread a repository call blocks on, and a test can substitute
+`UnconfinedTestDispatcher()`. A `Dispatchers.IO` literal anywhere outside
+`CoroutinesModule` is a bug.
+
+Process-lifetime work injects `@ApplicationScope` rather than building its
+own scope: `ScaffoldApp.onCreate()` launches `contactRepository.seedIfEmpty()`
+into it. Seeding deliberately stays behind the repository interface rather
+than moving into a `RoomDatabase.Callback.onCreate` in `DatabaseModule` —
+the callback would need a `Provider<ContactDao>` to break the cycle back to
+the database it's constructing, and it would put a piece of app behaviour in
+a DI module where nobody thinks to look for it. "Ensure the store has
+starting data" is a repository concern; *when* to run it is the app's.
 
 ## Navigation
 

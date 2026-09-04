@@ -7,7 +7,9 @@ import com.example.scaffold.data.local.AppDatabase
 import com.example.scaffold.data.remote.MealApi
 import com.example.scaffold.model.MealCategory
 import com.example.scaffold.util.runSuspendCatching
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import mockwebserver3.MockResponse
@@ -30,6 +32,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
  * themealdb.com sits behind — replaced with a local [MockWebServer] serving canned copies of
  * its real responses — so no interface of ours is faked or mocked anywhere in this test.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class MealRepositoryEndToEndTest {
     private lateinit var server: MockWebServer
@@ -59,7 +62,12 @@ class MealRepositoryEndToEndTest {
                     AppDatabase::class.java,
                 ).build()
 
-        repository = MealRepositoryImpl(retrofit.create(MealApi::class.java), database.mealDao())
+        repository =
+            MealRepositoryImpl(
+                retrofit.create(MealApi::class.java),
+                database.mealDao(),
+                UnconfinedTestDispatcher(),
+            )
     }
 
     @After
