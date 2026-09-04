@@ -140,6 +140,16 @@ migration history — `Migrations.kt` doesn't exist yet — so the first real
 schema change after this baseline is what creates that file and starts
 numbering from `MIGRATION_1_2`.
 
+Schemas are exported (`exportSchema = true`, `room { schemaDirectory(...) }`
+via the `androidx.room` Gradle plugin) to `app/schemas/`, and **the generated
+`<version>.json` is committed with the change that produced it** — it's the
+only record of what the old schema was, and `MigrationTestHelper` needs it to
+create a database at an earlier version. `app/src/androidTest/.../data/local/
+MigrationTest.kt` is the template: it currently just asserts version 1 matches
+the compiled database, and each new migration adds a case that creates the old
+version, writes a row, runs `runMigrationsAndValidate`, and asserts the row
+survived.
+
 ## Dependency injection
 
 Hilt modules live in `di/`, one per concern (`NetworkModule`,
