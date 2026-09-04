@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew ktlintFormat*)",
+      "Bash(./gradlew ktlintCheck*)",
+      "Bash(./gradlew detekt*)",
+      "Bash(./gradlew lintDebug*)",
+      "Bash(./gradlew testDebugUnitTest*)",
+      "Bash(./gradlew assembleDebug*)",
+      "Bash(./gradlew connectedDebugAndroidTest*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "WebFetch(domain:developer.android.com)",
+      "WebFetch(domain:mvnrepository.com)"
+    ]
+  }
+}

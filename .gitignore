@@ -4,6 +4,7 @@ build/
 
 # Local configuration files (do not commit, machine-specific)
 local.properties
+.claude/settings.local.json
 
 # Kotlin incremental compilation / K2 daemon cache
 .kotlin/
