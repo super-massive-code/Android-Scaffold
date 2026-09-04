@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -129,5 +130,26 @@ class MealListViewModelTest {
             viewModel.dismissTransientError()
 
             assertNull((viewModel.uiState.value as MealListUiState.Content).transientError)
+        }
+
+    @Test
+    fun `a refresh over cached meals shows the pull-to-refresh indicator until it finishes`() =
+        runTest {
+            val meal = Meal(id = "1", title = "Cake", thumbnailUrl = "https://example.com/cake.jpg")
+            val viewModel =
+                MealListViewModel(
+                    FakeMealRepository(
+                        initialMeals = listOf(meal),
+                        mealsAfterRefresh = listOf(meal),
+                        refreshDelayByCategory = mapOf(MealCategory.Chicken to 100L),
+                    ),
+                )
+
+            // The refresh launched from init is still suspended in the fake's delay here.
+            assertTrue((viewModel.uiState.value as MealListUiState.Content).isRefreshing)
+
+            advanceUntilIdle()
+
+            assertFalse((viewModel.uiState.value as MealListUiState.Content).isRefreshing)
         }
 }

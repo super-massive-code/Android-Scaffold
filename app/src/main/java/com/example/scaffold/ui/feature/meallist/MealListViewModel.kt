@@ -54,6 +54,7 @@ class MealListViewModel
                             meals = meals,
                             selectedCategory = category,
                             transientError = (status as? RefreshStatus.Failed)?.throwable?.toUiError(),
+                            isRefreshing = status is RefreshStatus.InFlight,
                         )
                     status is RefreshStatus.Failed -> MealListUiState.Error(status.throwable.toUiError())
                     status is RefreshStatus.InFlight -> MealListUiState.Loading

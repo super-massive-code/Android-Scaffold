@@ -32,7 +32,7 @@ class MealListScreenTest {
                 uiState = contentWith(Meal(id = "7", title = "Trifle", thumbnailUrl = "")),
                 onMealClick = { clickedId = it },
                 onCategorySelected = {},
-                onRetry = {},
+                onRefresh = {},
                 onTransientErrorShown = {},
             )
         }
@@ -51,7 +51,7 @@ class MealListScreenTest {
                 uiState = contentWith(Meal(id = "7", title = "Trifle", thumbnailUrl = "")),
                 onMealClick = {},
                 onCategorySelected = { selected = it },
-                onRetry = {},
+                onRefresh = {},
                 onTransientErrorShown = {},
             )
         }

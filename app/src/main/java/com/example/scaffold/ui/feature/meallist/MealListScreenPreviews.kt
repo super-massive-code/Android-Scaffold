@@ -22,7 +22,7 @@ private fun MealListScreenContentPreview() {
             uiState = MealListUiState.Content(meals = PreviewMeals, selectedCategory = MealCategory.Chicken),
             onMealClick = {},
             onCategorySelected = {},
-            onRetry = {},
+            onRefresh = {},
             onTransientErrorShown = {},
         )
     }
@@ -36,7 +36,7 @@ private fun MealListScreenEmptyPreview() {
             uiState = MealListUiState.Content(meals = emptyList(), selectedCategory = MealCategory.Seafood),
             onMealClick = {},
             onCategorySelected = {},
-            onRetry = {},
+            onRefresh = {},
             onTransientErrorShown = {},
         )
     }
@@ -50,7 +50,7 @@ private fun MealListScreenLoadingPreview() {
             uiState = MealListUiState.Loading,
             onMealClick = {},
             onCategorySelected = {},
-            onRetry = {},
+            onRefresh = {},
             onTransientErrorShown = {},
         )
     }
@@ -64,7 +64,7 @@ private fun MealListScreenErrorPreview() {
             uiState = MealListUiState.Error(UiError.Network),
             onMealClick = {},
             onCategorySelected = {},
-            onRetry = {},
+            onRefresh = {},
             onTransientErrorShown = {},
         )
     }

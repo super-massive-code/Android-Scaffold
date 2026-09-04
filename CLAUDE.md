@@ -93,6 +93,13 @@ Screen-scoped nav arguments are read by the ViewModel via
 `SavedStateHandle.toRoute<Destinations.X>()`, not passed as Composable
 parameters — see `MealDetailViewModel` for the pattern.
 
+The same field-on-`Content` idea covers ongoing status: `MealListUiState
+.Content.isRefreshing` drives `PullToRefreshBox`, derived from the ViewModel's
+refresh status rather than tracked separately by the screen. A refresh with an
+empty cache is still `Loading` — the pull indicator is for a refresh over
+content that's already on screen, and a failure during one surfaces as
+`transientError` below.
+
 **One-off UI feedback is a field on `Content`, not an event stream.** When a
 refresh fails while there's already something on screen, replacing the
 content with an error screen would be a downgrade — the cached list is still

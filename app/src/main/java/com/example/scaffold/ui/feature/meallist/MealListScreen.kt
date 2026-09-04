@@ -25,6 +25,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,7 +67,7 @@ fun MealListScreen(
         uiState = uiState,
         onMealClick = onMealClick,
         onCategorySelected = viewModel::selectCategory,
-        onRetry = viewModel::refresh,
+        onRefresh = viewModel::refresh,
         onTransientErrorShown = viewModel::dismissTransientError,
         modifier = modifier,
         sharedTransitionScope = sharedTransitionScope,
@@ -81,7 +82,7 @@ fun MealListScreen(
     uiState: MealListUiState,
     onMealClick: (String) -> Unit,
     onCategorySelected: (MealCategory) -> Unit,
-    onRetry: () -> Unit,
+    onRefresh: () -> Unit,
     onTransientErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -119,7 +120,7 @@ fun MealListScreen(
                 is MealListUiState.Error ->
                     ErrorState(
                         message = stringResource(state.error.messageRes),
-                        onRetry = onRetry,
+                        onRetry = onRefresh,
                     )
                 is MealListUiState.Content ->
                     Column {
@@ -128,13 +129,18 @@ fun MealListScreen(
                             onCategorySelected = onCategorySelected,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
-                        MealList(
-                            meals = state.meals,
-                            onMealClick = onMealClick,
-                            sharedTransitionScope = sharedTransitionScope,
-                            animatedVisibilityScope = animatedVisibilityScope,
+                        PullToRefreshBox(
+                            isRefreshing = state.isRefreshing,
+                            onRefresh = onRefresh,
                             modifier = Modifier.weight(1f),
-                        )
+                        ) {
+                            MealList(
+                                meals = state.meals,
+                                onMealClick = onMealClick,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = animatedVisibilityScope,
+                            )
+                        }
                     }
             }
         }
